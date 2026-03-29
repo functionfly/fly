@@ -1,0 +1,30 @@
+# Binaries
+/fly
+/dist/
+*.exe
+*.test
+
+# Build artifacts
+bin/
+
+# Go workspace
+/vendor/
+
+# GoReleaser
+.goreleaser.local.yml
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test cache
+/tmp/
+*.out
+coverage.txt

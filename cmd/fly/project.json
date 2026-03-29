@@ -1,0 +1,24 @@
+{
+  "name": "fly-cli",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cmd/fly",
+  "projectType": "application",
+  "tags": ["type:cli", "platform:go"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/bin/fly"],
+      "options": {
+        "command": "go build -o bin/fly ./cmd/fly"
+      },
+      "cache": true
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "go test ./cmd/fly/..."
+      },
+      "cache": true
+    }
+  }
+}
