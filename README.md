@@ -45,7 +45,7 @@ fly test
 fly publish
 ```
 
-Your function is now live at `https://api.functionfly.com/<you>/slugify`.
+Your function is now live at `https://api.functionfly.com/fx/<you>/slugify`.
 
 ---
 

@@ -39,13 +39,13 @@ Output:
 ✓ Deploying to edge...
 ✓ Warming cache...
 
-✓ Published trase/slugify@1.0.0
+✓ Published micro/slugify@1.0.0
 
 Public URL:
-https://api.functionfly.com/trase/slugify
+https://api.functionfly.com/fx/micro/slugify
 
 Curl:
-curl https://api.functionfly.com/trase/slugify -d "Hello World"
+curl https://api.functionfly.com/fx/micro/slugify -d "Hello World"
 
 Stats will be available in 30 seconds`,
 	Run: publishRun,
@@ -132,10 +132,10 @@ func publishRun(cmd *cobra.Command, args []string) {
 	}
 	fmt.Println()
 	fmt.Printf("Public URL:\n")
-	fmt.Printf("https://api.functionfly.com/%s/%s\n", creds.User.Username, manifest.Name)
+	fmt.Printf("https://api.functionfly.com/fx/%s/%s\n", creds.User.Username, manifest.Name)
 	fmt.Println()
 	fmt.Printf("Curl:\n")
-	fmt.Printf("curl https://api.functionfly.com/%s/%s -d \"Hello World\"\n", creds.User.Username, manifest.Name)
+	fmt.Printf("curl https://api.functionfly.com/fx/%s/%s -d \"Hello World\"\n", creds.User.Username, manifest.Name)
 	fmt.Println()
 	fmt.Println("Stats will be available in 30 seconds")
 }
