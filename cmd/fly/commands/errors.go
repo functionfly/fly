@@ -148,11 +148,21 @@ var Trace = func(format string, args ...interface{}) {
 	}
 }
 
-// DebugMode, VerboseMode, and TraceMode are global flags set by command-line arguments.
+// DebugMode, VerboseMode, TraceMode, and OutputFormat are global flags set by command-line arguments.
 // These are accessed by commands throughout the CLI.
 var DebugMode = false
 var VerboseMode = false
 var TraceMode = false
+
+// OutputFormat controls output rendering across commands.
+// Values: "table" (default human-readable), "json", "csv".
+var OutputFormat = "table"
+
+// WantJSON returns true when the global --format flag is set to "json".
+// Commands should use this to decide between human-readable and machine output.
+func WantJSON() bool {
+	return OutputFormat == "json"
+}
 
 // InitDebugFlags initializes the debug/verbose/trace flags on a cobra command.
 // This should be called in the init() function of each command that needs these flags.

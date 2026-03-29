@@ -19,8 +19,8 @@ func NewLogsCmd() *cobra.Command {
 	var asJSON bool
 	var level string
 	cmd := &cobra.Command{
-		Use:   "logs",
-		Short: "Stream live execution logs",
+		Use:     "logs",
+		Short:   "Stream live execution logs",
 		Example: "  fly logs\n  fly logs --follow\n  fly logs --tail 100\n  fly logs --level error\n  fly logs --json",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runLogs(follow, tail, since, level, asJSON)
@@ -134,16 +134,20 @@ func printLogEntry(entry LogEntry, asJSON bool) {
 	}
 	ts := entry.Timestamp.Format("15:04:05")
 	level := strings.ToUpper(entry.Level)
+	useColor := IsColorTerminal()
 	levelColor := ""
-	switch strings.ToLower(entry.Level) {
-	case "error":
-		levelColor = "\033[31m"
-	case "warn", "warning":
-		levelColor = "\033[33m"
-	case "info":
-		levelColor = "\033[36m"
+	reset := ""
+	if useColor {
+		reset = "\033[0m"
+		switch strings.ToLower(entry.Level) {
+		case "error":
+			levelColor = "\033[31m"
+		case "warn", "warning":
+			levelColor = "\033[33m"
+		case "info":
+			levelColor = "\033[36m"
+		}
 	}
-	reset := "\033[0m"
 	extras := ""
 	if entry.LatencyMs > 0 {
 		extras += fmt.Sprintf(" %dms", entry.LatencyMs)

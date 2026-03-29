@@ -1,7 +1,7 @@
 /*
 Copyright © 2026 FunctionFly
 */
-package cmd
+package commands
 
 import (
 	"github.com/spf13/cobra"
@@ -25,9 +25,6 @@ func CompileCmd() *cobra.Command {
 }
 
 func init() {
-	// Add compile command to root
-	rootCmd.AddCommand(compileCmd)
-
 	// Add python subcommand (wraps flypy-go)
 	compileCmd.AddCommand(newCompilePythonCmd())
 

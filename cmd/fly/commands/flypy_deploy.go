@@ -1,8 +1,7 @@
 /*
 Copyright © 2026 FunctionFly
-
 */
-package cmd
+package commands
 
 import (
 	"bytes"
@@ -20,7 +19,6 @@ import (
 	"time"
 
 	"github.com/functionfly/fly/internal/cli"
-	"github.com/functionfly/fly/internal/flypy"
 	artifactPkg "github.com/functionfly/fly/internal/flypy/artifact"
 	"github.com/spf13/cobra"
 )
@@ -115,17 +113,15 @@ func flypyDeployRun(cmd *cobra.Command, args []string) {
 
 	// Determine registry URL
 	registryURL := flypyDeployFlags.registry
-	var config *cli.Config
 	if registryURL == "" {
-		// Try to load from CLI config
-		var err error
-		config, err = cli.LoadConfig(".ffly/config.json")
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error: failed to load CLI config and no registry URL provided\n")
-			fmt.Fprintf(os.Stderr, "Either set --registry or run 'fly login' first\n")
+		// Use API URL from global config or FFLY_API_URL
+		apiURL := resolveAPIURL()
+		if apiURL == "" {
+			fmt.Fprintf(os.Stderr, "Error: no registry URL provided and no API URL configured\n")
+			fmt.Fprintf(os.Stderr, "Either set --registry, FFLY_API_URL, or run 'fly login' first\n")
 			os.Exit(1)
 		}
-		registryURL = config.APIURL
+		registryURL = apiURL
 	}
 
 	if flypyFlags.verbose {
@@ -140,9 +136,15 @@ func flypyDeployRun(cmd *cobra.Command, args []string) {
 	}
 
 	// Deploy to registry
-	fmt.Printf("🚀 Deploying to registry...\n")
+	fmt.Printf("Deploying to registry...\n")
 
-	deployResp, err := deployToRegistry(registryURL, deployReq, config)
+	// Load auth token from stored credentials
+	token := ""
+	if creds, err := LoadCredentials(); err == nil {
+		token = creds.Token
+	}
+
+	deployResp, err := deployToRegistry(registryURL, deployReq, token)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: deployment failed: %v\n", err)
 		os.Exit(1)
@@ -178,7 +180,7 @@ func loadArtifact(artifactPath string) (*artifactPkg.Artifact, error) {
 		return nil, fmt.Errorf("failed to read manifest: %w", err)
 	}
 
-	var manifest flypy.Manifest
+	var manifest artifactPkg.Manifest
 	if err := json.Unmarshal(manifestData, &manifest); err != nil {
 		return nil, fmt.Errorf("failed to parse manifest: %w", err)
 	}
@@ -197,7 +199,7 @@ func loadArtifact(artifactPath string) (*artifactPkg.Artifact, error) {
 		return nil, fmt.Errorf("failed to read capability map: %w", err)
 	}
 
-	var capMap flypy.CapabilityMap
+	var capMap artifactPkg.CapabilityMap
 	if err := json.Unmarshal(capData, &capMap); err != nil {
 		return nil, fmt.Errorf("failed to parse capability map: %w", err)
 	}
@@ -217,9 +219,9 @@ func loadArtifact(artifactPath string) (*artifactPkg.Artifact, error) {
 	}
 
 	return &artifactPkg.Artifact{
-		Manifest:        (*artifactPkg.Manifest)(&manifest),
+		Manifest:        &manifest,
 		WasmModule:      wasmData,
-		CapabilityMap:   (*artifactPkg.CapabilityMap)(&capMap),
+		CapabilityMap:   &capMap,
 		DeterminismHash: strings.TrimSpace(string(hashData)),
 		Signature:       signature,
 	}, nil
@@ -305,11 +307,11 @@ func createDeploymentRequest(artifact *artifactPkg.Artifact, public bool, tags [
 
 	// Create provider config
 	providerConfig := map[string]interface{}{
-		"runtime":        "flypy",
-		"deterministic":  true,
-		"public":         public,
-		"tags":           tags,
-		"capability_map": artifact.CapabilityMap,
+		"runtime":          "flypy",
+		"deterministic":    true,
+		"public":           public,
+		"tags":             tags,
+		"capability_map":   artifact.CapabilityMap,
 		"determinism_hash": artifact.DeterminismHash,
 	}
 
@@ -319,7 +321,7 @@ func createDeploymentRequest(artifact *artifactPkg.Artifact, public bool, tags [
 
 	return &cli.DeployRequest{
 		Provider:       "flypy",
-		Region:         "global", // FlyPy functions are deterministic and can run anywhere
+		Region:         "global",    // FlyPy functions are deterministic and can run anywhere
 		Artifact:       manifestB64, // Use manifest as primary artifact identifier
 		Routes:         []string{fmt.Sprintf("/functions/%s", artifact.Manifest.Name)},
 		EnvVars:        map[string]string{},
@@ -329,7 +331,7 @@ func createDeploymentRequest(artifact *artifactPkg.Artifact, public bool, tags [
 }
 
 // deployToRegistry sends the deployment request to the registry
-func deployToRegistry(registryURL string, req *cli.DeployRequest, config *cli.Config) (*cli.DeployResponse, error) {
+func deployToRegistry(registryURL string, req *cli.DeployRequest, token string) (*cli.DeployResponse, error) {
 	// Create HTTP client with timeout
 	client := &http.Client{
 		Timeout: 30 * time.Second,
@@ -350,9 +352,9 @@ func deployToRegistry(registryURL string, req *cli.DeployRequest, config *cli.Co
 
 	httpReq.Header.Set("Content-Type", "application/json")
 
-	// Add authentication headers from CLI config
-	if config != nil && config.Token != "" {
-		httpReq.Header.Set("Authorization", "Bearer "+config.Token)
+	// Add authentication header from stored credentials
+	if token != "" {
+		httpReq.Header.Set("Authorization", "Bearer "+token)
 	}
 
 	// Send request
@@ -427,4 +429,17 @@ func computeArtifactContentHash(artifact *artifactPkg.Artifact) (string, error) 
 	// Compute final hash
 	hash := hasher.Sum(nil)
 	return hex.EncodeToString(hash), nil
+}
+
+// resolveAPIURL returns the API URL from env/config, or empty string.
+func resolveAPIURL() string {
+	if url := os.Getenv("FFLY_API_URL"); url != "" {
+		return url
+	}
+	if cfg, _ := LoadConfig(); cfg != nil {
+		if cfg.API.URL != "" {
+			return cfg.API.URL
+		}
+	}
+	return "https://api.functionfly.com"
 }

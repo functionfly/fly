@@ -9,6 +9,8 @@ bin/
 
 # Go workspace
 /vendor/
+go.work
+go.work.sum
 
 # GoReleaser
 .goreleaser.local.yml

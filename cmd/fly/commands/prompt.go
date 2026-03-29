@@ -7,6 +7,24 @@ import (
 	"strings"
 )
 
+// IsInteractive returns true if stdin is a terminal.
+func IsInteractive() bool {
+	fi, err := os.Stdin.Stat()
+	if err != nil {
+		return false
+	}
+	return (fi.Mode() & os.ModeCharDevice) != 0
+}
+
+// IsColorTerminal returns true if stdout supports ANSI color codes.
+func IsColorTerminal() bool {
+	fi, err := os.Stdout.Stat()
+	if err != nil {
+		return false
+	}
+	return (fi.Mode() & os.ModeCharDevice) != 0
+}
+
 // Prompt asks the user a question and returns their answer.
 func Prompt(question, defaultVal string) string {
 	if defaultVal != "" {
@@ -29,7 +47,7 @@ func PromptSelect(question string, options []string, defaultVal string) string {
 	for i, opt := range options {
 		marker := " "
 		if opt == defaultVal {
-			marker = "›"
+			marker = ">"
 		}
 		fmt.Printf("  %s %d) %s\n", marker, i+1, opt)
 	}
@@ -66,13 +84,4 @@ func PromptConfirm(question string, defaultYes bool) bool {
 		return defaultYes
 	}
 	return answer == "y" || answer == "yes"
-}
-
-// IsInteractive returns true if stdin is a terminal.
-func IsInteractive() bool {
-	fi, err := os.Stdin.Stat()
-	if err != nil {
-		return false
-	}
-	return (fi.Mode() & os.ModeCharDevice) != 0
 }

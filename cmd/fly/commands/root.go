@@ -35,13 +35,13 @@ Go from idea → global API in under 60 seconds.
 
 	// Add --version flag (Cobra's built-in version support)
 	root.Version = version.Short()
-	root.Flags().Bool("version", false, "Show fly CLI version")
 
 	// Add persistent flags for debug/verbose/trace modes
 	// These are available to all subcommands
 	root.PersistentFlags().BoolVar(&DebugMode, "debug", false, "Enable full debug output")
 	root.PersistentFlags().BoolVarP(&VerboseMode, "verbose", "v", false, "Enable verbose API calls")
 	root.PersistentFlags().BoolVar(&TraceMode, "trace", false, "Enable HTTP trace with request/response bodies")
+	root.PersistentFlags().StringVarP(&OutputFormat, "format", "o", "table", "Output format: table, json")
 
 	// Set up persistent pre-run to handle debug mode
 	root.PersistentPreRun = func(cmd *cobra.Command, args []string) {
@@ -75,6 +75,9 @@ Go from idea → global API in under 60 seconds.
 		NewScheduleCmd(),
 		NewDreCmd(),
 		NewCompletionCmd(root),
+		BackendCmd(),
+		FlypyCmd(),
+		CompileCmd(),
 	)
 
 	return root

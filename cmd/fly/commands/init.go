@@ -119,6 +119,10 @@ func generateTemplateFiles(name, template string) (map[string]string, error) {
 `, name, runtimeForTemplate(template), timeoutForTemplate(template), memoryForTemplate(template), description, scheduleForTemplate(template))
 
 	switch template {
+	case "typescript":
+		files["index.ts"] = getHelloWorldTypeScriptTemplate(name)
+	case "javascript":
+		files["index.js"] = getHelloWorldJSTemplate(name)
 	case "http-api":
 		files["main.py"] = getHttpApiTemplate(name)
 	case "cron-job":
@@ -504,4 +508,76 @@ async def fetch(request, env, ctx):
         "headers": {"Content-Type": "application/json"}
     }
 `
+}
+
+func getHelloWorldJSTemplate(name string) string {
+	return fmt.Sprintf(`/**
+ * %s - A FunctionFly function
+ * A simple function that returns a greeting.
+ *
+ * @param {Request} request - The incoming request object
+ * @param {Object} env - Environment variables and secrets
+ * @param {Object} ctx - Execution context
+ * @returns {Object} Response with greeting message
+ */
+export default async function fetch(request, env, ctx) {
+  const url = new URL(request.url);
+  const nameParam = url.searchParams.get("name") || "World";
+
+  return {
+    status: 200,
+    body: JSON.stringify({ message: `+"`Hello, ${nameParam}! Welcome to FunctionFly.`"+` }),
+    headers: {
+      "Content-Type": "application/json",
+      "X-FunctionFly-Template": "hello-world",
+    },
+  };
+}
+`, name)
+}
+
+func getHelloWorldTypeScriptTemplate(name string) string {
+	return fmt.Sprintf(`/**
+ * %s - A FunctionFly function
+ * A simple function that returns a greeting.
+ */
+
+interface FunctionRequest {
+  url: string;
+  method: string;
+  headers: Record<string, string>;
+}
+
+interface FunctionEnv {
+  [key: string]: string | undefined;
+}
+
+interface FunctionContext {
+  waitUntil(promise: Promise<unknown>): void;
+}
+
+interface FunctionResponse {
+  status: number;
+  body: string;
+  headers: Record<string, string>;
+}
+
+export default async function fetch(
+  request: FunctionRequest,
+  env: FunctionEnv,
+  ctx: FunctionContext
+): Promise<FunctionResponse> {
+  const url = new URL(request.url);
+  const nameParam = url.searchParams.get("name") || "World";
+
+  return {
+    status: 200,
+    body: JSON.stringify({ message: `+"`Hello, ${nameParam}! Welcome to FunctionFly.`"+` }),
+    headers: {
+      "Content-Type": "application/json",
+      "X-FunctionFly-Template": "hello-world",
+    },
+  };
+}
+`, name)
 }

@@ -2,13 +2,15 @@ package testing
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
+	"github.com/functionfly/fly/internal/flypy"
 	"github.com/functionfly/fly/internal/manifest"
 )
 
-// RuntimeResult represents the result of a runtime execution
+// RuntimeResult represents the result of a runtime execution.
 type RuntimeResult struct {
 	Status    int
 	Output    string
@@ -16,65 +18,90 @@ type RuntimeResult struct {
 	LatencyMs int
 }
 
-// Runtime defines the interface for function runtimes
+// Runtime defines the interface for function runtimes.
 type Runtime interface {
 	Initialize(ctx context.Context, bundle []byte, manifest *manifest.Manifest) error
 	Execute(ctx context.Context, input string) (*RuntimeResult, error)
 	Cleanup() error
 }
 
-// RuntimeRegistry holds available runtimes
+// RuntimeRegistry holds available runtimes.
 var runtimeRegistry = make(map[string]Runtime)
 
-// RegisterRuntime registers a runtime implementation
+// RegisterRuntime registers a runtime implementation.
 func RegisterRuntime(name string, runtime Runtime) {
 	runtimeRegistry[name] = runtime
 }
 
-// GetRuntime returns the runtime for the given name
+// GetRuntime returns the runtime for the given name, falling back to WASMRuntime.
 func GetRuntime(name string) Runtime {
-	runtime, exists := runtimeRegistry[name]
-	if !exists {
-		// Return a generic runtime as fallback
-		return &GenericRuntime{}
+	if r, ok := runtimeRegistry[name]; ok {
+		return r
 	}
-	return runtime
+	return &WASMRuntime{}
 }
 
-// GenericRuntime provides a basic runtime implementation
-type GenericRuntime struct{}
+// WASMRuntime executes compiled WASM bundles via wasmtime.
+// It supports both the handler(ptr, len) ABI produced by the bundler and
+// the _start (WASI command) ABI.
+type WASMRuntime struct {
+	bundle   []byte
+	manifest *manifest.Manifest
+}
 
-func (r *GenericRuntime) Initialize(ctx context.Context, bundle []byte, manifest *manifest.Manifest) error {
-	// Basic initialization - in a real implementation this would set up
-	// the runtime environment (Node.js, Python, etc.)
+func (r *WASMRuntime) Initialize(_ context.Context, bundle []byte, m *manifest.Manifest) error {
+	if len(bundle) == 0 {
+		return fmt.Errorf("empty WASM bundle for function %q", m.Name)
+	}
+	r.bundle = bundle
+	r.manifest = m
 	return nil
 }
 
-func (r *GenericRuntime) Execute(ctx context.Context, input string) (*RuntimeResult, error) {
+func (r *WASMRuntime) Execute(ctx context.Context, input string) (*RuntimeResult, error) {
 	start := time.Now()
 
-	// Simulate function execution
-	// In a real implementation, this would invoke the actual function
-	output := fmt.Sprintf("Processed: %s", input)
+	// Normalise: if the caller passes a raw string wrap it in {"input":"..."} so
+	// the WASM handler always receives valid JSON.
+	inputJSON := []byte(input)
+	if len(inputJSON) == 0 || inputJSON[0] != '{' && inputJSON[0] != '[' {
+		b, err := json.Marshal(map[string]string{"input": input})
+		if err != nil {
+			return nil, fmt.Errorf("marshal input: %w", err)
+		}
+		inputJSON = b
+	}
 
-	latency := time.Since(start)
+	// Honour context cancellation before hitting wasmtime.
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
+	out, err := flypy.RunWasm(r.bundle, inputJSON)
+	latencyMs := int(time.Since(start).Milliseconds())
+	if err != nil {
+		return &RuntimeResult{
+			Status:    500,
+			Error:     err.Error(),
+			LatencyMs: latencyMs,
+		}, nil
+	}
 
 	return &RuntimeResult{
 		Status:    200,
-		Output:    output,
-		LatencyMs: int(latency.Milliseconds()),
+		Output:    string(out),
+		LatencyMs: latencyMs,
 	}, nil
 }
 
-func (r *GenericRuntime) Cleanup() error {
-	// Clean up runtime resources
-	return nil
-}
+func (r *WASMRuntime) Cleanup() error { return nil }
 
-// Initialize runtimes
 func init() {
-	RegisterRuntime("node", &GenericRuntime{})
-	RegisterRuntime("python", &GenericRuntime{})
-	RegisterRuntime("go", &GenericRuntime{})
-	RegisterRuntime("generic", &GenericRuntime{})
+	wasm := &WASMRuntime{}
+	RegisterRuntime("node", wasm)
+	RegisterRuntime("python", wasm)
+	RegisterRuntime("go", wasm)
+	RegisterRuntime("generic", wasm)
 }

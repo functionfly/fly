@@ -1,12 +1,11 @@
 /*
 Copyright © 2026 FunctionFly
 */
-package cmd
+package commands
 
 import (
 	"fmt"
 
-	"github.com/functionfly/fly/cmd/fly/commands"
 	"github.com/spf13/cobra"
 )
 
@@ -73,7 +72,7 @@ func runBackendAdd(cmd *cobra.Command) error {
 	}
 
 	// Get API client
-	client, err := commands.NewAPIClient()
+	client, err := NewAPIClient()
 	if err != nil {
 		return fmt.Errorf("failed to create API client: %w", err)
 	}

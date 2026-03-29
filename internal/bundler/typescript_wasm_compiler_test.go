@@ -1,3 +1,5 @@
+//go:build integration
+
 package bundler
 
 import (
@@ -39,10 +41,10 @@ export default handler;`
 func TestExtractMetadata(t *testing.T) {
 	// Create a test bundle with embedded metadata
 	metadata := &WASMMetadata{
-		HandlerName:      "testHandler",
-		MemoryPages:      128,
+		HandlerName:       "testHandler",
+		MemoryPages:       128,
 		ExportedFunctions: []string{"init", "execute", "alloc"},
-		WASITarget:       true,
+		WASITarget:        true,
 	}
 
 	// Embed metadata

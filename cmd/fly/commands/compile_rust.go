@@ -1,7 +1,7 @@
 /*
 Copyright © 2026 FunctionFly
 */
-package cmd
+package commands
 
 import (
 	"fmt"
@@ -170,20 +170,6 @@ func checkWasiTarget() error {
 	}
 
 	return nil
-}
-
-// contains is a simple string contains check
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsAt(s, substr))
-}
-
-func containsAt(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }
 
 // copyFile copies a file from src to dst

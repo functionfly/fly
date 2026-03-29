@@ -1,19 +1,18 @@
 /*
 Copyright © 2026 FunctionFly
 */
-package cmd
+package commands
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
-	"github.com/functionfly/fly/cmd/fly/commands"
 	"github.com/spf13/cobra"
 )
 
 // newBackendListCmd creates the backend list command
 func newBackendListCmd() *cobra.Command {
+	var asJSONList bool
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List backends",
@@ -28,44 +27,39 @@ including their status, region, and health information.`,
   fly backend list --app myapp --json`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runBackendList(cmd)
+			return runBackendList(cmd, asJSONList)
 		},
 	}
 
 	cmd.Flags().StringVar(&appName, "app", "", "Application name (required)")
-	cmd.Flags().BoolVar(&asJSON, "json", false, "Output as JSON")
+	cmd.Flags().BoolVar(&asJSONList, "json", false, "Output as JSON")
 
 	cmd.MarkFlagRequired("app")
 
 	return cmd
 }
 
-func runBackendList(cmd *cobra.Command) error {
-	// Get API client
-	client, err := commands.NewAPIClient()
+func runBackendList(cmd *cobra.Command, asJSON bool) error {
+	client, err := NewAPIClient()
 	if err != nil {
 		return fmt.Errorf("failed to create API client: %w", err)
 	}
 
-	// Get app ID from name
 	app, err := client.GetApp(appName)
 	if err != nil {
 		return fmt.Errorf("failed to get app: %w", err)
 	}
 
-	// Get app status (includes backends)
 	status, err := client.GetStatus(app.ID)
 	if err != nil {
 		return fmt.Errorf("failed to get app status: %w", err)
 	}
 
-	// Handle JSON output
 	if asJSON {
 		printJSON(status)
 		return nil
 	}
 
-	// Print as simple table
 	if len(status.Backends) == 0 {
 		fmt.Printf("No backends configured for app %s\n", appName)
 		return nil
@@ -107,11 +101,3 @@ func runBackendList(cmd *cobra.Command) error {
 
 	return nil
 }
-
-func printJSON(v interface{}) {
-	data, _ := json.MarshalIndent(v, "", "  ")
-	fmt.Println(string(data))
-}
-
-// Global variable for JSON flag
-var asJSON bool

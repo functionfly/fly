@@ -44,7 +44,7 @@ func DefaultConfig() *GlobalConfig {
 		API:       APIConfig{URL: "https://api.functionfly.com", Timeout: "30s"},
 		Dev:       DevConfig{Port: 8787, Watch: true, HotReload: true},
 		Publish:   PubConfig{Confirm: false, AutoUpdate: true},
-		Telemetry: TelConfig{Enabled: true, Anonymize: false},
+		Telemetry: TelConfig{Enabled: false, Anonymize: true},
 	}
 }
 

@@ -1,6 +1,6 @@
 module github.com/functionfly/fly
 
-go 1.25.0
+go 1.24.0
 
 require (
 	github.com/BurntSushi/toml v1.6.0
@@ -10,13 +10,10 @@ require (
 	github.com/charmbracelet/lipgloss v0.10.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/google/uuid v1.6.0
-	github.com/lib/pq v1.10.9
 	github.com/redis/go-redis/v9 v9.18.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.10.2
-	github.com/stretchr/testify v1.11.1
 	github.com/zalando/go-keyring v0.2.8
-	golang.org/x/crypto v0.48.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 

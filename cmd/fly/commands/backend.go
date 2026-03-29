@@ -1,7 +1,7 @@
 /*
 Copyright © 2026 FunctionFly
 */
-package cmd
+package commands
 
 import (
 	"github.com/spf13/cobra"

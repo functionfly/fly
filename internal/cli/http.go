@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -364,16 +365,16 @@ func (c *Client) TestFunction(author, name string, input string) (*TestResult, e
 
 // GetFunctionLogs retrieves function execution logs
 func (c *Client) GetFunctionLogs(author, name string, params map[string]string) ([]*FunctionLogEntry, error) {
-	url := fmt.Sprintf("/v1/registry/%s/%s/logs", author, name)
+	path := fmt.Sprintf("/v1/registry/%s/%s/logs", author, name)
 	if len(params) > 0 {
-		url += "?"
+		q := url.Values{}
 		for k, v := range params {
-			url += k + "=" + v + "&"
+			q.Set(k, v)
 		}
-		url = url[:len(url)-1] // Remove trailing &
+		path = path + "?" + q.Encode()
 	}
 
-	resp, err := c.doRequest("GET", url, nil)
+	resp, err := c.doRequest("GET", path, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -509,14 +510,14 @@ type BackendResponse struct {
 }
 
 type StatusResponse struct {
-	App      *AppResponse                `json:"app"`
-	Backends []*BackendStatusResponse    `json:"backends"`
+	App      *AppResponse             `json:"app"`
+	Backends []*BackendStatusResponse `json:"backends"`
 }
 
 type BackendStatusResponse struct {
-	Backend            *BackendResponse         `json:"backend"`
-	CircuitState       *CircuitStateResponse   `json:"circuit_state"`
-	LatestHealthCheck  *HealthCheckResponse    `json:"latest_health_check"`
+	Backend           *BackendResponse      `json:"backend"`
+	CircuitState      *CircuitStateResponse `json:"circuit_state"`
+	LatestHealthCheck *HealthCheckResponse  `json:"latest_health_check"`
 }
 
 type CircuitStateResponse struct {
@@ -541,6 +542,8 @@ type PublishRequest struct {
 	Name     string          `json:"name"`
 	Version  string          `json:"version"`
 	Manifest json.RawMessage `json:"manifest"`
+	Access   string          `json:"access,omitempty"` // "public" | "private"
+	Force    bool            `json:"force,omitempty"`  // overwrite existing version
 }
 
 type PublishResponse struct {
@@ -563,12 +566,12 @@ type FunctionInfo struct {
 }
 
 type FunctionStats struct {
-	FunctionID     string  `json:"function_id"`
-	TotalCalls     int64   `json:"total_calls"`
-	SuccessRate    float64 `json:"success_rate"`
-	AvgLatencyMs   float64 `json:"avg_latency_ms"`
-	Revenue        float64 `json:"revenue"`
-	Period         string  `json:"period"`
+	FunctionID   string  `json:"function_id"`
+	TotalCalls   int64   `json:"total_calls"`
+	SuccessRate  float64 `json:"success_rate"`
+	AvgLatencyMs float64 `json:"avg_latency_ms"`
+	Revenue      float64 `json:"revenue"`
+	Period       string  `json:"period"`
 }
 
 type TestRequest struct {
@@ -576,59 +579,59 @@ type TestRequest struct {
 }
 
 type TestResult struct {
-	Status     int    `json:"status"`
-	Body       string `json:"body"`
-	LatencyMs  int    `json:"latency_ms"`
-	Cached     bool   `json:"cached"`
-	Region     string `json:"region"`
+	Status    int    `json:"status"`
+	Body      string `json:"body"`
+	LatencyMs int    `json:"latency_ms"`
+	Cached    bool   `json:"cached"`
+	Region    string `json:"region"`
 }
 
 // Monitoring and Logging Types
 
 // FunctionLogEntry represents a function execution log entry
 type FunctionLogEntry struct {
-	Timestamp   time.Time `json:"timestamp"`
-	Level       string    `json:"level"`
-	Message     string    `json:"message"`
-	RequestID   string    `json:"request_id"`
-	StatusCode  int       `json:"status_code,omitempty"`
-	LatencyMs   int       `json:"latency_ms,omitempty"`
-	Region      string    `json:"region,omitempty"`
-	UserAgent   string    `json:"user_agent,omitempty"`
-	IP          string    `json:"ip,omitempty"`
+	Timestamp  time.Time `json:"timestamp"`
+	Level      string    `json:"level"`
+	Message    string    `json:"message"`
+	RequestID  string    `json:"request_id"`
+	StatusCode int       `json:"status_code,omitempty"`
+	LatencyMs  int       `json:"latency_ms,omitempty"`
+	Region     string    `json:"region,omitempty"`
+	UserAgent  string    `json:"user_agent,omitempty"`
+	IP         string    `json:"ip,omitempty"`
 }
 
 // LogEntry represents a deployment or system log entry
 type LogEntry struct {
-	Timestamp time.Time `json:"timestamp"`
-	Level     string    `json:"level"`
-	Message   string    `json:"message"`
-	Source    string    `json:"source"`
-	DeploymentID string `json:"deployment_id,omitempty"`
+	Timestamp    time.Time `json:"timestamp"`
+	Level        string    `json:"level"`
+	Message      string    `json:"message"`
+	Source       string    `json:"source"`
+	DeploymentID string    `json:"deployment_id,omitempty"`
 }
 
 // DetailedMetrics represents comprehensive performance metrics
 type DetailedMetrics struct {
-	FunctionID       string              `json:"function_id"`
-	Name             string              `json:"name"`
-	Author           string              `json:"author"`
-	Period           string              `json:"period"`
-	TotalRequests    int64               `json:"total_requests"`
-	SuccessfulReqs   int64               `json:"successful_requests"`
-	FailedReqs       int64               `json:"failed_requests"`
-	ErrorRate        float64             `json:"error_rate"`
-	AvgLatencyMs     float64             `json:"avg_latency_ms"`
-	P50LatencyMs     float64             `json:"p50_latency_ms"`
-	P95LatencyMs     float64             `json:"p95_latency_ms"`
-	P99LatencyMs     float64             `json:"p99_latency_ms"`
-	MinLatencyMs     float64             `json:"min_latency_ms"`
-	MaxLatencyMs     float64             `json:"max_latency_ms"`
-	RequestsPerSec   float64             `json:"requests_per_sec"`
-	DataTransferred  float64             `json:"data_transferred_mb"`
-	TopErrors        []ErrorCount        `json:"top_errors"`
-	StatusCodes      map[int]int64       `json:"status_codes"`
-	RegionalStats    []RegionalStats     `json:"regional_stats"`
-	TimeSeries       []TimeSeriesPoint   `json:"time_series"`
+	FunctionID      string            `json:"function_id"`
+	Name            string            `json:"name"`
+	Author          string            `json:"author"`
+	Period          string            `json:"period"`
+	TotalRequests   int64             `json:"total_requests"`
+	SuccessfulReqs  int64             `json:"successful_requests"`
+	FailedReqs      int64             `json:"failed_requests"`
+	ErrorRate       float64           `json:"error_rate"`
+	AvgLatencyMs    float64           `json:"avg_latency_ms"`
+	P50LatencyMs    float64           `json:"p50_latency_ms"`
+	P95LatencyMs    float64           `json:"p95_latency_ms"`
+	P99LatencyMs    float64           `json:"p99_latency_ms"`
+	MinLatencyMs    float64           `json:"min_latency_ms"`
+	MaxLatencyMs    float64           `json:"max_latency_ms"`
+	RequestsPerSec  float64           `json:"requests_per_sec"`
+	DataTransferred float64           `json:"data_transferred_mb"`
+	TopErrors       []ErrorCount      `json:"top_errors"`
+	StatusCodes     map[int]int64     `json:"status_codes"`
+	RegionalStats   []RegionalStats   `json:"regional_stats"`
+	TimeSeries      []TimeSeriesPoint `json:"time_series"`
 }
 
 // ErrorCount represents error frequency
@@ -640,55 +643,55 @@ type ErrorCount struct {
 
 // RegionalStats represents per-region statistics
 type RegionalStats struct {
-	Region          string  `json:"region"`
-	Requests        int64   `json:"requests"`
-	AvgLatencyMs    float64 `json:"avg_latency_ms"`
-	ErrorRate       float64 `json:"error_rate"`
+	Region       string  `json:"region"`
+	Requests     int64   `json:"requests"`
+	AvgLatencyMs float64 `json:"avg_latency_ms"`
+	ErrorRate    float64 `json:"error_rate"`
 }
 
 // TimeSeriesPoint represents a data point in time series
 type TimeSeriesPoint struct {
-	Timestamp   time.Time `json:"timestamp"`
-	Requests    int64     `json:"requests"`
-	AvgLatency  float64   `json:"avg_latency_ms"`
-	ErrorRate   float64   `json:"error_rate"`
+	Timestamp  time.Time `json:"timestamp"`
+	Requests   int64     `json:"requests"`
+	AvgLatency float64   `json:"avg_latency_ms"`
+	ErrorRate  float64   `json:"error_rate"`
 }
 
 // HealthStatus represents comprehensive health status
 type HealthStatus struct {
-	Overall        string            `json:"overall"`
-	FunctionHealth *FunctionHealth   `json:"function_health,omitempty"`
-	SystemHealth   *SystemHealth     `json:"system_health,omitempty"`
-	PlatformHealth *PlatformHealth   `json:"platform_health,omitempty"`
-	Timestamp      time.Time         `json:"timestamp"`
+	Overall        string          `json:"overall"`
+	FunctionHealth *FunctionHealth `json:"function_health,omitempty"`
+	SystemHealth   *SystemHealth   `json:"system_health,omitempty"`
+	PlatformHealth *PlatformHealth `json:"platform_health,omitempty"`
+	Timestamp      time.Time       `json:"timestamp"`
 }
 
 // FunctionHealth represents function-specific health
 type FunctionHealth struct {
-	FunctionName    string             `json:"function_name"`
-	Status          string             `json:"status"`
-	Availability    float64            `json:"availability"`
-	AvgLatencyMs    float64            `json:"avg_latency_ms"`
-	ErrorRate       float64            `json:"error_rate"`
-	LastChecked     time.Time          `json:"last_checked"`
-	Issues          []HealthIssue      `json:"issues,omitempty"`
-	RegionalHealth  []RegionalHealth   `json:"regional_health,omitempty"`
+	FunctionName   string           `json:"function_name"`
+	Status         string           `json:"status"`
+	Availability   float64          `json:"availability"`
+	AvgLatencyMs   float64          `json:"avg_latency_ms"`
+	ErrorRate      float64          `json:"error_rate"`
+	LastChecked    time.Time        `json:"last_checked"`
+	Issues         []HealthIssue    `json:"issues,omitempty"`
+	RegionalHealth []RegionalHealth `json:"regional_health,omitempty"`
 }
 
 // SystemHealth represents system-wide health
 type SystemHealth struct {
-	Status       string        `json:"status"`
-	ResponseTime time.Duration `json:"response_time"`
+	Status       string          `json:"status"`
+	ResponseTime time.Duration   `json:"response_time"`
 	Services     []ServiceStatus `json:"services"`
-	Issues       []HealthIssue `json:"issues,omitempty"`
+	Issues       []HealthIssue   `json:"issues,omitempty"`
 }
 
 // PlatformHealth represents platform-wide health
 type PlatformHealth struct {
-	Status          string            `json:"status"`
-	Regions         []RegionStatus    `json:"regions"`
-	GlobalMetrics   map[string]interface{} `json:"global_metrics,omitempty"`
-	Issues          []HealthIssue     `json:"issues,omitempty"`
+	Status        string                 `json:"status"`
+	Regions       []RegionStatus         `json:"regions"`
+	GlobalMetrics map[string]interface{} `json:"global_metrics,omitempty"`
+	Issues        []HealthIssue          `json:"issues,omitempty"`
 }
 
 // HealthIssue represents a health issue
@@ -701,10 +704,10 @@ type HealthIssue struct {
 
 // RegionalHealth represents health in a specific region
 type RegionalHealth struct {
-	Region       string  `json:"region"`
-	Status       string  `json:"status"`
-	LatencyMs    float64 `json:"latency_ms"`
-	ErrorRate    float64 `json:"error_rate"`
+	Region    string  `json:"region"`
+	Status    string  `json:"status"`
+	LatencyMs float64 `json:"latency_ms"`
+	ErrorRate float64 `json:"error_rate"`
 }
 
 // ServiceStatus represents the status of a service
@@ -716,8 +719,8 @@ type ServiceStatus struct {
 
 // RegionStatus represents the status of a region
 type RegionStatus struct {
-	Name   string `json:"name"`
-	Status string `json:"status"`
+	Name   string        `json:"name"`
+	Status string        `json:"status"`
 	Issues []HealthIssue `json:"issues,omitempty"`
 }
 

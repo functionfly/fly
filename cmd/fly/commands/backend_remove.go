@@ -1,12 +1,11 @@
 /*
 Copyright © 2026 FunctionFly
 */
-package cmd
+package commands
 
 import (
 	"fmt"
 
-	"github.com/functionfly/fly/cmd/fly/commands"
 	"github.com/spf13/cobra"
 )
 
@@ -35,7 +34,7 @@ func newBackendRemoveCmd() *cobra.Command {
 }
 
 func runBackendRemove(cmd *cobra.Command) error {
-	client, err := commands.NewAPIClient()
+	client, err := NewAPIClient()
 	if err != nil {
 		return fmt.Errorf("failed to create API client: %w", err)
 	}

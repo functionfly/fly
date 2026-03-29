@@ -2,7 +2,7 @@
 Copyright © 2026 FunctionFly
 
 */
-package cmd
+package commands
 
 import (
 	"context"

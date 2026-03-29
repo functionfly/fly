@@ -33,13 +33,15 @@ archives:
   - id: default
     formats:
       - tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    wrap_in_directory: true
+  - id: windows-zip
+    formats:
       - zip
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     wrap_in_directory: true
-    format_overrides:
-      - goos: windows
-        formats:
-          - zip
+    builds:
+      - fly
 
 nfpms:
   - id: linux-packages
@@ -54,7 +56,7 @@ nfpms:
       - apk
     bindir: /usr/local/bin
 
-homebrew_casks:
+brews:
   - name: fly
     repository:
       owner: functionfly
@@ -63,6 +65,11 @@ homebrew_casks:
     homepage: https://functionfly.com
     description: FunctionFly CLI — Go from idea to global API in under 60 seconds
     license: Apache-2.0
+    ids:
+      - default
+    skip_upload: auto
+    install: |
+      bin.install "fly"
 
 checksum:
   name_template: "checksums.txt"
