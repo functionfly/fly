@@ -19,11 +19,12 @@ func NewLogsCmd() *cobra.Command {
 	var asJSON bool
 	var level string
 	cmd := &cobra.Command{
-		Use:     "logs",
+		Use:     "logs [author/name]",
 		Short:   "Stream live execution logs",
-		Example: "  fly logs\n  fly logs --follow\n  fly logs --tail 100\n  fly logs --level error\n  fly logs --json",
+		Example: "  fly logs\n  fly logs alice/my-fn\n  fly logs --follow\n  fly logs --tail 100\n  fly logs --level error\n  fly logs --json",
+		Args:    cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runLogs(follow, tail, since, level, asJSON)
+			return runLogs(args, follow, tail, since, level, asJSON)
 		},
 	}
 	cmd.Flags().BoolVarP(&follow, "follow", "f", false, "Stream logs in real-time")
@@ -45,12 +46,8 @@ type LogEntry struct {
 	Cached     bool      `json:"cached,omitempty"`
 }
 
-func runLogs(follow bool, tail int, since, level string, asJSON bool) error {
-	manifest, err := LoadManifest("")
-	if err != nil {
-		return err
-	}
-	creds, err := LoadCredentials()
+func runLogs(args []string, follow bool, tail int, since, level string, asJSON bool) error {
+	author, name, err := resolveAuthorName(args)
 	if err != nil {
 		return err
 	}
@@ -58,8 +55,8 @@ func runLogs(follow bool, tail int, since, level string, asJSON bool) error {
 	if err != nil {
 		return err
 	}
-	if !asJSON {
-		fmt.Printf("📋 Logs for %s/%s\n", creds.User.Username, manifest.Name)
+	if !asJSON && !WantJSON() {
+		fmt.Printf("📋 Logs for %s/%s\n", author, name)
 		if follow {
 			fmt.Printf("   Streaming... (Ctrl+C to stop)\n")
 		}
@@ -72,7 +69,7 @@ func runLogs(follow bool, tail int, since, level string, asJSON bool) error {
 	if level != "" {
 		params = append(params, "level="+level)
 	}
-	path := fmt.Sprintf("/v1/registry/%s/%s/logs?%s", creds.User.Username, manifest.Name, strings.Join(params, "&"))
+	path := fmt.Sprintf("/v1/registry/%s/%s/logs?%s", author, name, strings.Join(params, "&"))
 	if follow {
 		sigCh := make(chan os.Signal, 1)
 		signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)

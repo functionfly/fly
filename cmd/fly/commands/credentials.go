@@ -146,3 +146,33 @@ func IsLoggedIn() bool {
 	_, err := LoadCredentials()
 	return err == nil
 }
+
+// resolveAuthorName returns (author, name) either from an optional positional
+// "author/name" argument or by reading functionfly.jsonc + stored credentials.
+func resolveAuthorName(args []string) (author, name string, err error) {
+	if len(args) > 0 {
+		parts := splitAuthorName(args[0])
+		if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+			return "", "", fmt.Errorf("invalid argument %q — expected author/name", args[0])
+		}
+		return parts[0], parts[1], nil
+	}
+	manifest, merr := LoadManifest("")
+	if merr != nil {
+		return "", "", fmt.Errorf("no functionfly.jsonc found — run 'fly init' or pass author/name as argument")
+	}
+	creds, cerr := LoadCredentials()
+	if cerr != nil {
+		return "", "", fmt.Errorf("not logged in — run 'fly login'")
+	}
+	return creds.User.Username, manifest.Name, nil
+}
+
+func splitAuthorName(s string) []string {
+	for i, c := range s {
+		if c == '/' {
+			return []string{s[:i], s[i+1:]}
+		}
+	}
+	return []string{s}
+}

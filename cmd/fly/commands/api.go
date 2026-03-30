@@ -86,6 +86,19 @@ func (c *APIClient) Put(path string, body interface{}, out interface{}) error {
 	return c.do(req, out)
 }
 
+func (c *APIClient) Patch(path string, body interface{}, out interface{}) error {
+	data, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest("PATCH", c.BaseURL+path, bytes.NewReader(data))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	return c.do(req, out)
+}
+
 func (c *APIClient) Delete(path string, out interface{}) error {
 	req, err := http.NewRequest("DELETE", c.BaseURL+path, nil)
 	if err != nil {

@@ -19,7 +19,11 @@ Go from idea → global API in under 60 seconds.
   fly init <name>        Scaffold a new function project
   fly dev                Run function locally
   fly publish            Publish function to the registry
+  fly deploy --env       Publish and promote to staging or production
+  fly deploy --canary N  Publish and start a canary at N% traffic
+  fly canary             Manage canary deployments
   fly test               Test your deployed function
+  fly health             Check deployed function health
   fly update <bump>      Bump function version
   fly stats              View usage statistics
   fly logs               Stream live execution logs
@@ -63,6 +67,7 @@ Go from idea → global API in under 60 seconds.
 		NewInitCmd(),
 		NewDevCmd(),
 		NewPublishCmd(),
+		NewDeployCmd(),
 		NewPublishBatchCmd(),
 		NewManifestCmd(),
 		NewTestCmd(),
@@ -70,6 +75,8 @@ Go from idea → global API in under 60 seconds.
 		NewStatsCmd(),
 		NewLogsCmd(),
 		NewRollbackCmd(),
+		NewHealthCmd(),
+		NewCanaryCmd(),
 		NewEnvCmd(),
 		NewSecretsCmd(),
 		NewScheduleCmd(),

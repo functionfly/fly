@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -137,7 +138,7 @@ func runPublish(access string, force, build, dryRun, asJSON, skipTypeCheck bool)
 
 func runBuildStep(manifest *Manifest) error {
 	fmt.Printf("🔨 Building before publish...\n")
-	if manifest.Runtime == "python3.11" || manifest.Runtime == "python3.10" {
+	if strings.HasPrefix(manifest.Runtime, "python3") {
 		funcFile := "main.py"
 		if _, err := os.Stat(funcFile); err != nil {
 			funcFile = "handler.py"
@@ -169,7 +170,10 @@ func validateManifest(m *Manifest) error {
 }
 
 func bundleFunction(manifest *Manifest) ([]byte, error) {
-	candidates := []string{"index.js", "index.ts", "main.py", "handler.js", "handler.ts", "handler.py"}
+	candidates := []string{
+		"index.js", "index.ts", "main.py", "handler.js", "handler.ts", "handler.py",
+		"main.go", "handler.go", "main.rs", "lib.rs",
+	}
 	for _, f := range candidates {
 		data, err := os.ReadFile(f)
 		if err == nil {

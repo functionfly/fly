@@ -12,11 +12,12 @@ func NewStatsCmd() *cobra.Command {
 	var period string
 	var asJSON bool
 	cmd := &cobra.Command{
-		Use:   "stats",
-		Short: "View function usage statistics",
-		Example: "  fly stats\n  fly stats --period 7d\n  fly stats --json",
+		Use:     "stats [author/name]",
+		Short:   "View function usage statistics",
+		Example: "  fly stats\n  fly stats alice/my-fn\n  fly stats --period 7d\n  fly stats --json",
+		Args:    cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runStats(period, asJSON)
+			return runStats(args, period, asJSON)
 		},
 	}
 	cmd.Flags().StringVar(&period, "period", "24h", "Time period (24h, 7d, 30d)")
@@ -36,12 +37,8 @@ type StatsResponse struct {
 	DailyCalls   []int64 `json:"daily_calls,omitempty"`
 }
 
-func runStats(period string, asJSON bool) error {
-	manifest, err := LoadManifest("")
-	if err != nil {
-		return err
-	}
-	creds, err := LoadCredentials()
+func runStats(args []string, period string, asJSON bool) error {
+	author, name, err := resolveAuthorName(args)
 	if err != nil {
 		return err
 	}
@@ -50,19 +47,19 @@ func runStats(period string, asJSON bool) error {
 		return err
 	}
 	var stats StatsResponse
-	path := fmt.Sprintf("/v1/registry/%s/%s/stats?period=%s", creds.User.Username, manifest.Name, period)
+	path := fmt.Sprintf("/v1/registry/functions/%s/%s/stats?period=%s", author, name, period)
 	if err := client.Get(path, &stats); err != nil {
 		return fmt.Errorf("could not fetch stats: %w", err)
 	}
-	if asJSON {
+	if asJSON || WantJSON() {
 		printJSON(stats)
 		return nil
 	}
-	fmt.Printf("📊 %s by %s\n\n", manifest.Name, creds.User.Username)
+	fmt.Printf("📊 %s by %s\n\n", name, author)
 	fmt.Printf("Period: %s\n\n", period)
 	fmt.Printf("Calls:        %s\n", formatNumber(stats.TotalCalls))
 	fmt.Printf("Success rate: %.2f%%\n", stats.SuccessRate*100)
-	fmt.Printf("Avg latency:  %.0fms\n", stats.AvgLatencyMs)
+	fmt.Printf("Avg latency:  %.0f ms\n", stats.AvgLatencyMs)
 	if stats.Revenue > 0 {
 		fmt.Printf("Revenue:      $%.2f\n", stats.Revenue)
 	}

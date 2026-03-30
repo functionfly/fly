@@ -11,11 +11,12 @@ func NewRollbackCmd() *cobra.Command {
 	var force bool
 	var asJSON bool
 	cmd := &cobra.Command{
-		Use:   "rollback",
-		Short: "Roll back to a previous version",
-		Example: "  fly rollback\n  fly rollback --version 1.0.5\n  fly rollback --force",
+		Use:     "rollback [author/name]",
+		Short:   "Roll back to a previous version",
+		Example: "  fly rollback\n  fly rollback alice/my-fn\n  fly rollback --version 1.0.5\n  fly rollback --force",
+		Args:    cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runRollback(version, force, asJSON)
+			return runRollback(args, version, force, asJSON)
 		},
 	}
 	cmd.Flags().StringVar(&version, "version", "", "Version to roll back to (default: previous)")
@@ -31,12 +32,8 @@ type VersionInfo struct {
 	Active     bool   `json:"active"`
 }
 
-func runRollback(targetVersion string, force, asJSON bool) error {
-	manifest, err := LoadManifest("")
-	if err != nil {
-		return err
-	}
-	creds, err := LoadCredentials()
+func runRollback(args []string, targetVersion string, force, asJSON bool) error {
+	author, name, err := resolveAuthorName(args)
 	if err != nil {
 		return err
 	}
@@ -45,7 +42,7 @@ func runRollback(targetVersion string, force, asJSON bool) error {
 		return err
 	}
 	var versions []VersionInfo
-	path := fmt.Sprintf("/v1/registry/%s/%s/versions", creds.User.Username, manifest.Name)
+	path := fmt.Sprintf("/v1/registry/functions/%s/%s/versions", author, name)
 	if err := client.Get(path, &versions); err != nil {
 		return fmt.Errorf("could not fetch versions: %w", err)
 	}
@@ -87,8 +84,8 @@ func runRollback(targetVersion string, force, asJSON bool) error {
 		}
 		fmt.Printf("Roll back to:    %s\n\n", target.Version)
 	}
-	if !force && IsInteractive() && !asJSON {
-		confirmed := PromptConfirm(fmt.Sprintf("Roll back %s to v%s?", manifest.Name, target.Version), false)
+	if !force && IsInteractive() && !asJSON && !WantJSON() {
+		confirmed := PromptConfirm(fmt.Sprintf("Roll back %s/%s to v%s?", author, name, target.Version), false)
 		if !confirmed {
 			fmt.Println("Rollback cancelled.")
 			return nil
@@ -96,19 +93,19 @@ func runRollback(targetVersion string, force, asJSON bool) error {
 	}
 	rollbackReq := map[string]interface{}{"version": target.Version}
 	var result map[string]interface{}
-	rollbackPath := fmt.Sprintf("/v1/registry/%s/%s/rollback", creds.User.Username, manifest.Name)
+	rollbackPath := fmt.Sprintf("/v1/registry/functions/%s/%s/rollback", author, name)
 	if err := client.Post(rollbackPath, rollbackReq, &result); err != nil {
 		return fmt.Errorf("rollback failed: %w", err)
 	}
-	if asJSON {
+	if asJSON || WantJSON() {
 		prevVersion := ""
 		if current != nil {
 			prevVersion = current.Version
 		}
-		printJSON(map[string]interface{}{"success": true, "function": manifest.Name, "rolled_back_to": target.Version, "previous_version": prevVersion})
+		printJSON(map[string]interface{}{"success": true, "function": name, "author": author, "rolled_back_to": target.Version, "previous_version": prevVersion})
 		return nil
 	}
-	fmt.Printf("✅ Rolled back %s to v%s\n", manifest.Name, target.Version)
+	fmt.Printf("✅ Rolled back %s/%s to v%s\n", author, name, target.Version)
 	fmt.Printf("\nRun 'fly test' to verify the rollback.\n")
 	return nil
 }
