@@ -29,13 +29,13 @@ func newCompileRustCmd() *cobra.Command {
 This command uses cargo to build your Rust function targeting the
 wasm32-wasi WebAssembly runtime for FunctionFly.`,
 		Example: `  # Compile a Rust function (debug mode)
-  fly compile rust --input ./Cargo.toml --output ./dist
+  ffly compile rust --input ./Cargo.toml --output ./dist
 
   # Compile with optimizations (release mode)
-  fly compile rust --input ./Cargo.toml --output ./dist --release
+  ffly compile rust --input ./Cargo.toml --output ./dist --release
 
   # Compile with verbose output
-  fly compile rust -i ./Cargo.toml -o ./dist -v`,
+  ffly compile rust -i ./Cargo.toml -o ./dist -v`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runCompileRust(cmd)
@@ -144,7 +144,7 @@ func runCompileRust(cmd *cobra.Command) error {
 	fmt.Printf("   WASM file: %s\n", dstWasm)
 	fmt.Println()
 	fmt.Printf("To deploy, run:\n")
-	fmt.Printf("   fly deploy --wasm %s\n", dstWasm)
+	fmt.Printf("   ffly deploy --wasm %s\n", dstWasm)
 
 	return nil
 }

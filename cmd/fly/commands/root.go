@@ -9,30 +9,30 @@ import (
 
 func NewRootCmd() *cobra.Command {
 	root := &cobra.Command{
-		Use:   "fly",
+		Use:   "ffly",
 		Short: "FunctionFly CLI — publish functions to the global edge",
-		Long: `fly is the FunctionFly developer CLI.
+		Long: `ffly is the FunctionFly developer CLI.
 
 Go from idea → global API in under 60 seconds.
 
-  fly login              Authenticate with FunctionFly
-  fly init <name>        Scaffold a new function project
-  fly dev                Run function locally
-  fly publish            Publish function to the registry
-  fly deploy --env       Publish and promote to staging or production
-  fly deploy --canary N  Publish and start a canary at N% traffic
-  fly canary             Manage canary deployments
-  fly test               Test your deployed function
-  fly health             Check deployed function health
-  fly update <bump>      Bump function version
-  fly stats              View usage statistics
-  fly logs               Stream live execution logs
-  fly rollback           Roll back to a previous version
-  fly env                Manage environment variables
-  fly secrets            Manage secrets
-  fly whoami             Show current logged-in user
-  fly logout             Clear stored credentials
-  fly completion         Generate shell completion scripts`,
+  ffly login              Authenticate with FunctionFly
+  ffly init <name>        Scaffold a new function project
+  ffly dev                Run function locally
+  ffly publish            Publish function to the registry
+  ffly deploy --env       Publish and promote to staging or production
+  ffly deploy --canary N  Publish and start a canary at N% traffic
+  ffly canary             Manage canary deployments
+  ffly test               Test your deployed function
+  ffly health             Check deployed function health
+  ffly update <bump>      Bump function version
+  ffly stats              View usage statistics
+  ffly logs               Stream live execution logs
+  ffly rollback           Roll back to a previous version
+  ffly env                Manage environment variables
+  ffly secrets            Manage secrets
+  ffly whoami             Show current logged-in user
+  ffly logout             Clear stored credentials
+  ffly completion         Generate shell completion scripts`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
@@ -82,6 +82,9 @@ Go from idea → global API in under 60 seconds.
 		NewScheduleCmd(),
 		NewDreCmd(),
 		NewCompletionCmd(root),
+		NewCompletionsAliasCmd(root),
+		NewDoctorCmd(),
+		NewChangelogCmd(),
 		BackendCmd(),
 		FlypyCmd(),
 		CompileCmd(),
@@ -94,17 +97,25 @@ Go from idea → global API in under 60 seconds.
 func NewVersionCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",
-		Short: "Show the fly CLI version",
-		Long: `Show version information for the fly CLI.
+		Short: "Show the ffly CLI version",
+		Long: `Show version information for the ffly CLI.
 
 This displays the semantic version, git commit hash, and build date.
-Use this to verify which version of fly you have installed.`,
-		Example: `  fly version
-  fly version --short  # Show only version number`,
+Use this to verify which version of ffly you have installed.`,
+		Example: `  ffly version
+  ffly version --short  # Show only version number
+  ffly version --json   # Output as JSON`,
 		Run: func(cmd *cobra.Command, args []string) {
 			short, _ := cmd.Flags().GetBool("short")
+			asJSON, _ := cmd.Flags().GetBool("json")
 			if short {
 				fmt.Println(version.Short())
+			} else if asJSON {
+				printJSON(map[string]interface{}{
+					"version": version.Version,
+					"commit":  version.Commit,
+					"date":    version.Date,
+				})
 			} else {
 				PrintVersion()
 			}
@@ -112,6 +123,7 @@ Use this to verify which version of fly you have installed.`,
 	}
 
 	cmd.Flags().Bool("short", false, "Show only version number")
+	cmd.Flags().Bool("json", false, "Output as JSON")
 
 	return cmd
 }

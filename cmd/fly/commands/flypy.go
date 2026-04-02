@@ -21,9 +21,9 @@ Core Commands:
   local     Run function locally for testing and development
 
 Examples:
-  fly flypy build handler.py
-  fly flypy deploy --registry=https://api.functionfly.com
-  fly flypy local --port=8080`,
+  ffly flypy build handler.py
+  ffly flypy deploy --registry=https://api.functionfly.com
+  ffly flypy local --port=8080`,
 }
 
 // flypyFlags holds global flags for flypy commands

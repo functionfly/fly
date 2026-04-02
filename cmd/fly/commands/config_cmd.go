@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const configHelpLong = `Manage global fly CLI configuration.
+const configHelpLong = `Manage global ffly CLI configuration.
 
 Configuration precedence (highest first):
   1. Environment variables (FFLY_*)
@@ -19,15 +19,15 @@ Configuration precedence (highest first):
 Environment variables (override config file):
   FFLY_API_URL       API base URL (e.g. https://api.functionfly.com or http://localhost:8080)
   FFLY_API_TIMEOUT  Request timeout (e.g. 30s)
-  FFLY_DEV_EMAIL    Email for dev login (fly login --dev)
+  FFLY_DEV_EMAIL    Email for dev login (ffly login --dev)
   FFLY_DEV_PASSWORD Password for dev login
   FFLY_DEV_LOGIN=1  Force dev email/password login
   FFLY_TOKEN        Bearer token (overrides stored credentials)
   FFLY_TELEMETRY    Set to 0, false, or no to disable telemetry
   FFLY_CONFIG       Path to config file (overrides ~/.functionfly/config.yaml)
 
-Use "fly config" or "fly config view" to show current config and path.
-Use "fly config reset" to restore defaults (removes or overwrites config file).`
+Use "ffly config" or "ffly config view" to show current config and path.
+Use "ffly config reset" to restore defaults (removes or overwrites config file).`
 
 // NewConfigCmd returns the config command and its subcommands (view, reset).
 func NewConfigCmd() *cobra.Command {
@@ -35,12 +35,12 @@ func NewConfigCmd() *cobra.Command {
 		Use:   "config",
 		Short: "View or reset global CLI configuration",
 		Long:  configHelpLong,
-		Example: `  fly config
-  fly config view
-  fly config reset`,
-		RunE: runConfigView, // "fly config" with no subcommand runs view
+		Example: `  ffly config
+  ffly config view
+  ffly config reset`,
+		RunE: runConfigView, // "ffly config" with no subcommand runs view
 	}
-	cmd.AddCommand(newConfigViewCmd(), newConfigResetCmd())
+	cmd.AddCommand(newConfigViewCmd(), newConfigShowCmd(), newConfigResetCmd())
 	return cmd
 }
 
@@ -50,6 +50,15 @@ func newConfigViewCmd() *cobra.Command {
 		Short: "Show config file path and current configuration",
 		Long:  "Prints the path to the global config file and its contents (or 'using defaults' if the file does not exist). Environment overrides are applied when the CLI runs; this shows the merged view from file + env.",
 		RunE:  runConfigView,
+	}
+}
+
+func newConfigShowCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:    "show",
+		Short:  "Alias for 'view' — show current configuration",
+		RunE:   runConfigView,
+		Hidden: true,
 	}
 }
 

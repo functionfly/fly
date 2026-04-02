@@ -29,9 +29,9 @@ This allows you to test your function before deploying it to the registry.
 The server provides the same execution environment as production.
 
 Examples:
-  fly flypy local
-  fly flypy local --port=8080 --artifact=./dist
-  fly flypy local --watch`,
+  ffly flypy local
+  ffly flypy local --port=8080 --artifact=./dist
+  ffly flypy local --watch`,
 	Run: flypyLocalRun,
 }
 
@@ -60,7 +60,7 @@ func flypyLocalRun(cmd *cobra.Command, args []string) {
 	// Validate artifact directory exists
 	if _, err := os.Stat(artifactPath); os.IsNotExist(err) {
 		fmt.Fprintf(os.Stderr, "Error: artifact directory '%s' not found\n", artifactPath)
-		fmt.Fprintf(os.Stderr, "Run 'fly flypy build' first to compile your function\n")
+		fmt.Fprintf(os.Stderr, "Run 'ffly flypy build' first to compile your function\n")
 		os.Exit(1)
 	}
 
@@ -75,7 +75,7 @@ func flypyLocalRun(cmd *cobra.Command, args []string) {
 		filePath := filepath.Join(artifactPath, file)
 		if _, err := os.Stat(filePath); os.IsNotExist(err) {
 			fmt.Fprintf(os.Stderr, "Error: required artifact file '%s' not found in '%s'\n", file, artifactPath)
-			fmt.Fprintf(os.Stderr, "Run 'fly flypy build' to create a complete artifact\n")
+			fmt.Fprintf(os.Stderr, "Run 'ffly flypy build' to create a complete artifact\n")
 			os.Exit(1)
 		}
 	}

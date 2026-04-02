@@ -4,12 +4,12 @@
 $ErrorActionPreference = "Stop"
 
 $Repo = "functionfly/fly"
-$Binary = "fly"
-$InstallDir = if ($env:FLY_INSTALL_DIR) { $env:FLY_INSTALL_DIR } else { "$env:LOCALAPPDATA\fly\bin" }
+$Binary = "ffly"
+$InstallDir = if ($env:FLY_INSTALL_DIR) { $env:FLY_INSTALL_DIR } else { "$env:LOCALAPPDATA\ffly\bin" }
 
-function Write-Info { param([string]$Msg) Write-Host "[fly] $Msg" -ForegroundColor Blue }
-function Write-Ok   { param([string]$Msg) Write-Host "[fly] $Msg" -ForegroundColor Green }
-function Write-Die  { param([string]$Msg) Write-Host "[fly] error: $Msg" -ForegroundColor Red; exit 1 }
+function Write-Info { param([string]$Msg) Write-Host "[ffly] $Msg" -ForegroundColor Blue }
+function Write-Ok   { param([string]$Msg) Write-Host "[ffly] $Msg" -ForegroundColor Green }
+function Write-Die  { param([string]$Msg) Write-Host "[ffly] error: $Msg" -ForegroundColor Red; exit 1 }
 
 function Get-LatestVersion {
     $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/latest" -Headers @{ "Accept" = "application/vnd.github+json" }
@@ -26,7 +26,7 @@ function Main {
     $version = if ($env:FLY_VERSION) { $env:FLY_VERSION } else { Get-LatestVersion }
     $versionNum = $version -replace "^v", ""
 
-    Write-Info "Installing fly $version for windows/$arch..."
+    Write-Info "Installing ffly $version for windows/$arch..."
 
     $archive = "${Binary}_${versionNum}_windows_${arch}.zip"
     $url = "https://github.com/$Repo/releases/download/$version/$archive"
@@ -37,7 +37,16 @@ function Main {
     try {
         Write-Info "Downloading $url"
         $archivePath = Join-Path $tmpDir $archive
-        Invoke-WebRequest -Uri $url -OutFile $archivePath -UseBasicParsing
+        try {
+            Invoke-WebRequest -Uri $url -OutFile $archivePath -UseBasicParsing
+        } catch {
+            $legacyArchive = "fly_${versionNum}_windows_${arch}.zip"
+            $legacyUrl = "https://github.com/$Repo/releases/download/$version/$legacyArchive"
+            Write-Info "Falling back to legacy asset $legacyArchive"
+            $archive = $legacyArchive
+            $archivePath = Join-Path $tmpDir $archive
+            Invoke-WebRequest -Uri $legacyUrl -OutFile $archivePath -UseBasicParsing
+        }
 
         Write-Info "Extracting..."
         Expand-Archive -Path $archivePath -DestinationPath $tmpDir -Force
@@ -63,8 +72,8 @@ function Main {
             $env:Path = "$env:Path;$InstallDir"
         }
 
-        Write-Ok "fly $version installed to $destPath"
-        Write-Ok "Run 'fly --help' to get started."
+        Write-Ok "ffly $version installed to $destPath"
+        Write-Ok "Run 'ffly --help' to get started."
     }
     finally {
         Remove-Item -Path $tmpDir -Recurse -Force -ErrorAction SilentlyContinue

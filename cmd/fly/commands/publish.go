@@ -23,7 +23,7 @@ func NewPublishCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "publish",
 		Short:   "Publish your function to the FunctionFly registry",
-		Example: "  fly publish\n  fly publish --access private\n  fly publish --build\n  fly publish --dry-run\n  fly publish --json",
+		Example: "  ffly publish\n  ffly publish --access private\n  ffly publish --build\n  ffly publish --dry-run\n  ffly publish --json",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runPublish(access, force, build, dryRun, asJSON, skipTypeCheck)
 		},
@@ -132,7 +132,7 @@ func runPublish(access string, force, build, dryRun, asJSON, skipTypeCheck bool)
 	fmt.Printf("\n✅ Published %s/%s@%s\n\n", creds.User.Username, manifest.Name, manifest.Version)
 	fmt.Printf("Public URL:\n  %s\n\n", result.URL)
 	fmt.Printf("Curl:\n  curl %s -d \"Hello World\"\n\n", result.URL)
-	fmt.Printf("Stats will be available in ~30 seconds.\n  fly stats\n")
+	fmt.Printf("Stats will be available in ~30 seconds.\n  ffly stats\n")
 	return nil
 }
 

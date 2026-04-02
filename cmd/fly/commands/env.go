@@ -11,7 +11,7 @@ func NewEnvCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "env",
 		Short:   "Manage environment variables",
-		Example: "  fly env list\n  fly env set KEY=value\n  fly env get KEY\n  fly env unset KEY",
+		Example: "  ffly env list\n  ffly env set KEY=value\n  ffly env get KEY\n  ffly env unset KEY",
 	}
 	cmd.AddCommand(newEnvListCmd(), newEnvSetCmd(), newEnvGetCmd(), newEnvUnsetCmd())
 	return cmd
@@ -75,14 +75,14 @@ func runEnvList(asJSON bool) error {
 	}
 	if len(envVars) == 0 {
 		fmt.Println("No environment variables set.")
-		fmt.Println("   → Use: fly env set KEY=value")
+		fmt.Println("   → Use: ffly env set KEY=value")
 		return nil
 	}
 	fmt.Printf("Environment variables for %s/%s:\n\n", creds.User.Username, manifest.Name)
 	for k := range envVars {
 		fmt.Printf("  %s\n", k)
 	}
-	fmt.Printf("\n%d variable(s) — values hidden; use 'fly env get KEY' to view a specific value\n", len(envVars))
+	fmt.Printf("\n%d variable(s) — values hidden; use 'ffly env get KEY' to view a specific value\n", len(envVars))
 	return nil
 }
 
@@ -141,7 +141,7 @@ func runEnvGet(key string) error {
 	}
 	value, ok := envVars[key]
 	if !ok {
-		return fmt.Errorf("environment variable %q not found\n   → Use 'fly env list' to see all variables", key)
+		return fmt.Errorf("environment variable %q not found\n   → Use 'ffly env list' to see all variables", key)
 	}
 	fmt.Println(value)
 	return nil

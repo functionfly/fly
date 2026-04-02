@@ -27,13 +27,13 @@ func newBackendAddCmd() *cobra.Command {
 A backend is a runtime environment where your functions execute.
 Supported providers: vercel, cloudflare, deno, fly`,
 		Example: `  # Add a Vercel backend
-  fly backend add --app myapp --provider vercel --region us-east-1
+  ffly backend add --app myapp --provider vercel --region us-east-1
 
   # Add a Cloudflare Workers backend
-  fly backend add --app myapp --provider cloudflare --region global
+  ffly backend add --app myapp --provider cloudflare --region global
 
   # Add a backend with custom URL
-  fly backend add --app myapp --provider custom --url https://my-backend.example.com`,
+  ffly backend add --app myapp --provider custom --url https://my-backend.example.com`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runBackendAdd(cmd)

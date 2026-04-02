@@ -29,7 +29,7 @@ func NewLoginCmd() *cobra.Command {
 		Use:     "login",
 		Short:   "Authenticate with FunctionFly",
 		Long:    "Authenticate with FunctionFly using OAuth or dev email/password.\n\nIn dev mode (--dev flag required), use email/password against the API.",
-		Example: "  fly login\n  fly login --provider github\n  fly login --dev --email admin@functionfly.local",
+		Example: "  ffly login\n  ffly login --provider github\n  ffly login --dev --email admin@functionfly.local",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runLogin(provider, noBrowser, dev, email)
 		},

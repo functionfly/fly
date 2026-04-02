@@ -12,7 +12,7 @@ func NewWhoamiCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "whoami",
 		Short:   "Show the currently logged-in user",
-		Example: "  fly whoami\n  fly whoami --json",
+		Example: "  ffly whoami\n  ffly whoami --json",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runWhoami(asJSON)
 		},

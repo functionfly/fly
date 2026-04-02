@@ -11,7 +11,7 @@ func NewLogoutCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "logout",
 		Short:   "Clear stored credentials and log out",
-		Example: "  fly logout\n  fly logout --force",
+		Example: "  ffly logout\n  ffly logout --force",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runLogout(force)
 		},
@@ -37,6 +37,6 @@ func runLogout(force bool) error {
 		return fmt.Errorf("could not remove credentials: %w", err)
 	}
 	fmt.Printf("✅ Logged out %s\n", creds.User.Username)
-	fmt.Println("   Run 'fly login' to authenticate again.")
+	fmt.Println("   Run 'ffly login' to authenticate again.")
 	return nil
 }

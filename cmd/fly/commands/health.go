@@ -28,7 +28,7 @@ func NewHealthCmd() *cobra.Command {
 		Long: `Fetches live stats for the deployed function and reports availability,
 latency, and success rate. Reads function name from functionfly.jsonc when
 no argument is given.`,
-		Example: "  fly health\n  fly health alice/my-fn\n  fly health --watch\n  fly health --json",
+		Example: "  ffly health\n  ffly health alice/my-fn\n  ffly health --watch\n  ffly health --json",
 		Args:    cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runHealth(args, asJSON, watch)

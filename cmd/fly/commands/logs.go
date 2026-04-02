@@ -21,7 +21,7 @@ func NewLogsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "logs [author/name]",
 		Short:   "Stream live execution logs",
-		Example: "  fly logs\n  fly logs alice/my-fn\n  fly logs --follow\n  fly logs --tail 100\n  fly logs --level error\n  fly logs --json",
+		Example: "  ffly logs\n  ffly logs alice/my-fn\n  ffly logs --follow\n  ffly logs --tail 100\n  ffly logs --level error\n  ffly logs --json",
 		Args:    cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runLogs(args, follow, tail, since, level, asJSON)

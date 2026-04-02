@@ -15,11 +15,11 @@ func NewInitCmd() *cobra.Command {
 		Use:   "init <name>",
 		Short: "Scaffold a new function project",
 		Long:  "Create a new FunctionFly function project with all required files.",
-		Example: `  fly init hello-world
-  fly init --template hello-world my-function
-  fly init --template http-api api-service
-  fly init --template cron-job daily-task
-  fly init --template webhook webhook-handler`,
+		Example: `  ffly init hello-world
+  ffly init --template hello-world my-function
+  ffly init --template http-api api-service
+  ffly init --template cron-job daily-task
+  ffly init --template webhook webhook-handler`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := ""
@@ -39,7 +39,7 @@ func runInit(name, template string, force bool) error {
 		if IsInteractive() {
 			name = Prompt("Function name", "my-function")
 		} else {
-			return fmt.Errorf("function name is required\n   → Usage: fly init <name>")
+			return fmt.Errorf("function name is required\n   → Usage: ffly init <name>")
 		}
 	}
 	if !isValidFunctionName(name) {
@@ -77,8 +77,8 @@ func runInit(name, template string, force bool) error {
 	fmt.Printf("\n✅ Created %s/\n\n", name)
 	fmt.Println("Next steps:")
 	fmt.Printf("  cd %s\n", name)
-	fmt.Println("  fly dev          # Run locally")
-	fmt.Println("  fly publish      # Publish to the registry")
+	fmt.Println("  ffly dev          # Run locally")
+	fmt.Println("  ffly publish      # Publish to the registry")
 	return nil
 }
 

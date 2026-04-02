@@ -33,9 +33,9 @@ The artifact will be uploaded, verified for determinism, and made available
 for execution through the FunctionFly API.
 
 Examples:
-  fly flypy deploy
-  fly flypy deploy --artifact=./dist --registry=https://api.functionfly.com
-  fly flypy deploy --dry-run`,
+  ffly flypy deploy
+  ffly flypy deploy --artifact=./dist --registry=https://api.functionfly.com
+  ffly flypy deploy --dry-run`,
 	Run: flypyDeployRun,
 }
 
@@ -68,7 +68,7 @@ func flypyDeployRun(cmd *cobra.Command, args []string) {
 	// Validate artifact directory exists
 	if _, err := os.Stat(artifactPath); os.IsNotExist(err) {
 		fmt.Fprintf(os.Stderr, "Error: artifact directory '%s' not found\n", artifactPath)
-		fmt.Fprintf(os.Stderr, "Run 'fly flypy build' first to compile your function\n")
+		fmt.Fprintf(os.Stderr, "Run 'ffly flypy build' first to compile your function\n")
 		os.Exit(1)
 	}
 
@@ -118,7 +118,7 @@ func flypyDeployRun(cmd *cobra.Command, args []string) {
 		apiURL := resolveAPIURL()
 		if apiURL == "" {
 			fmt.Fprintf(os.Stderr, "Error: no registry URL provided and no API URL configured\n")
-			fmt.Fprintf(os.Stderr, "Either set --registry, FFLY_API_URL, or run 'fly login' first\n")
+			fmt.Fprintf(os.Stderr, "Either set --registry, FFLY_API_URL, or run 'ffly login' first\n")
 			os.Exit(1)
 		}
 		registryURL = apiURL

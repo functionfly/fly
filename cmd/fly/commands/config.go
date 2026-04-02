@@ -57,7 +57,7 @@ func configPath() (string, error) {
 }
 
 // ConfigPath returns the path to the global config file (~/.functionfly/config.yaml).
-// Use this when showing config location in errors or in "fly config" output.
+// Use this when showing config location in errors or in "ffly config" output.
 func ConfigPath() (string, error) {
 	return configPath()
 }
@@ -88,11 +88,11 @@ func LoadConfig() (*GlobalConfig, error) {
 			ApplyEnvOverrides(c)
 			return c, nil
 		}
-		return nil, fmt.Errorf("could not read config from %s: %w\n   → Try: fly config reset or check FFLY_API_URL", path, err)
+		return nil, fmt.Errorf("could not read config from %s: %w\n   → Try: ffly config reset or check FFLY_API_URL", path, err)
 	}
 	cfg := DefaultConfig()
 	if err := yaml.Unmarshal(data, cfg); err != nil {
-		return nil, fmt.Errorf("could not parse config at %s: %w\n   → Try: fly config reset", path, err)
+		return nil, fmt.Errorf("could not parse config at %s: %w\n   → Try: ffly config reset", path, err)
 	}
 	ApplyEnvOverrides(cfg)
 	return cfg, nil
@@ -152,7 +152,7 @@ func LoadManifest(dir string) (*Manifest, error) {
 		}
 		return &m, nil
 	}
-	return nil, fmt.Errorf("no functionfly.jsonc found in %s\n   → Run: fly init <name>", dir)
+	return nil, fmt.Errorf("no functionfly.jsonc found in %s\n   → Run: ffly init <name>", dir)
 }
 
 func SaveManifest(dir string, m *Manifest) error {

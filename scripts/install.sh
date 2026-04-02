@@ -5,14 +5,14 @@
 set -euo pipefail
 
 REPO="functionfly/fly"
-BINARY="fly"
+BINARY="ffly"
 INSTALL_DIR="${FLY_INSTALL_DIR:-/usr/local/bin}"
 
 # ── helpers ────────────────────────────────────────────────────────────────────
 
-info()  { printf "\033[1;34m[fly]\033[0m %s\n" "$*"; }
-ok()    { printf "\033[1;32m[fly]\033[0m %s\n" "$*"; }
-die()   { printf "\033[1;31m[fly]\033[0m error: %s\n" "$*" >&2; exit 1; }
+info()  { printf "\033[1;34m[ffly]\033[0m %s\n" "$*"; }
+ok()    { printf "\033[1;32m[ffly]\033[0m %s\n" "$*"; }
+die()   { printf "\033[1;31m[ffly]\033[0m error: %s\n" "$*" >&2; exit 1; }
 
 need() {
   command -v "$1" >/dev/null 2>&1 || die "Required command not found: $1"
@@ -58,7 +58,7 @@ main() {
   arch="$(detect_arch)"
   version="${FLY_VERSION:-$(latest_version)}"
 
-  info "Installing fly ${version} for ${os}/${arch}..."
+  info "Installing ffly ${version} for ${os}/${arch}..."
 
   ext="tar.gz"
   [[ "$os" == "windows" ]] && ext="zip"
@@ -70,7 +70,14 @@ main() {
   trap 'rm -rf "$tmp"' EXIT
 
   info "Downloading ${url}"
-  curl -fsSL "$url" -o "${tmp}/${tarball}"
+  if ! curl -fsSL "$url" -o "${tmp}/${tarball}"; then
+    local legacy
+    legacy="fly_${version#v}_${os}_${arch}.${ext}"
+    url="https://github.com/${REPO}/releases/download/${version}/${legacy}"
+    info "Falling back to legacy asset ${legacy}"
+    curl -fsSL "$url" -o "${tmp}/${legacy}"
+    tarball="${legacy}"
+  fi
 
   if [[ "$ext" == "tar.gz" ]]; then
     tar -xzf "${tmp}/${tarball}" -C "$tmp"
@@ -90,8 +97,8 @@ main() {
     sudo install -m 0755 "$bin_src" "${INSTALL_DIR}/${BINARY}"
   fi
 
-  ok "fly ${version} installed to ${INSTALL_DIR}/${BINARY}"
-  ok "Run 'fly --help' to get started."
+  ok "ffly ${version} installed to ${INSTALL_DIR}/${BINARY}"
+  ok "Run 'ffly --help' to get started."
 }
 
 main "$@"

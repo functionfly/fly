@@ -18,7 +18,7 @@ func NewTestCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "test",
 		Short:   "Test your deployed function",
-		Example: "  fly test\n  fly test --input \"Hello World\"\n  fly test --json",
+		Example: "  ffly test\n  ffly test --input \"Hello World\"\n  ffly test --json",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runTest(input, asJSON, verbose)
 		},

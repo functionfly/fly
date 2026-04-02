@@ -1,6 +1,6 @@
 version: 2
 
-project_name: fly
+project_name: ffly
 
 before:
   hooks:
@@ -8,9 +8,9 @@ before:
     - go generate ./...
 
 builds:
-  - id: fly
-    main: ./cmd/fly
-    binary: fly
+  - id: ffly
+    main: ./cmd/ffly
+    binary: ffly
     goos:
       - linux
       - darwin
@@ -41,11 +41,11 @@ archives:
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     wrap_in_directory: true
     builds:
-      - fly
+      - ffly
 
 nfpms:
   - id: linux-packages
-    package_name: fly
+    package_name: ffly
     maintainer: FunctionFly <support@functionfly.com>
     homepage: https://functionfly.com
     description: FunctionFly CLI — Go from idea to global API in under 60 seconds
@@ -57,7 +57,7 @@ nfpms:
     bindir: /usr/local/bin
 
 brews:
-  - name: fly
+  - name: ffly
     repository:
       owner: functionfly
       name: homebrew-tap
@@ -69,7 +69,7 @@ brews:
       - default
     skip_upload: auto
     install: |
-      bin.install "fly"
+      bin.install "ffly"
 
 checksum:
   name_template: "checksums.txt"

@@ -108,58 +108,94 @@ func (c *APIClient) Delete(path string, out interface{}) error {
 }
 
 const maxResponseSize = 10 << 20 // 10 MB
+const maxRetries = 3
 
 func (c *APIClient) do(req *http.Request, out interface{}) error {
 	if c.Token != "" {
 		req.Header.Set("Authorization", "Bearer "+c.Token)
 	}
-	req.Header.Set("User-Agent", "fly-cli/"+version.Short())
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return fmt.Errorf("network error: %w\n   → Check your internet connection", err)
-	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseSize))
-	if err != nil {
-		return fmt.Errorf("could not read response: %w", err)
-	}
-	if resp.StatusCode >= 400 {
-		var errResp struct {
-			Error   string `json:"error"`
-			Message string `json:"message"`
+	req.Header.Set("User-Agent", "ffly-cli/"+version.Short())
+
+	var lastErr error
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		if attempt > 0 {
+			delay := time.Duration(1<<uint(attempt-1)) * 500 * time.Millisecond
+			time.Sleep(delay)
 		}
-		_ = json.Unmarshal(body, &errResp)
-		msg := errResp.Error
-		if msg == "" {
-			msg = errResp.Message
+
+		resp, err := c.client.Do(cloneRequest(req))
+		if err != nil {
+			lastErr = fmt.Errorf("network error: %w\n   → Check your internet connection", err)
+			continue
 		}
-		if msg == "" {
-			msg = fmt.Sprintf("HTTP %d", resp.StatusCode)
-			if len(body) > 0 && body[0] != '{' {
-				msg = fmt.Sprintf("%s: %s", msg, strings.TrimSpace(string(body)))
+
+		body, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseSize))
+		resp.Body.Close()
+		if err != nil {
+			lastErr = fmt.Errorf("could not read response: %w", err)
+			continue
+		}
+
+		if resp.StatusCode == 429 || resp.StatusCode >= 500 {
+			lastErr = c.buildError(resp.StatusCode, body)
+			continue
+		}
+
+		if resp.StatusCode >= 400 {
+			return c.buildError(resp.StatusCode, body)
+		}
+
+		if out != nil && len(body) > 0 {
+			if err := json.Unmarshal(body, out); err != nil {
+				return fmt.Errorf("could not parse response: %w", err)
 			}
 		}
-		hint := ""
-		switch resp.StatusCode {
-		case 401:
-			hint = "\n   → Your session may have expired — run: fly login"
-		case 403:
-			hint = "\n   → You don't have permission to perform this action"
-		case 404:
-			hint = "\n   → The resource was not found"
-		case 409:
-			hint = "\n   → This version already exists — run: fly update patch"
-		case 429:
-			hint = "\n   → Rate limited — please wait a moment and try again"
-		}
-		return fmt.Errorf("%s%s", msg, hint)
+		return nil
 	}
-	if out != nil && len(body) > 0 {
-		if err := json.Unmarshal(body, out); err != nil {
-			return fmt.Errorf("could not parse response: %w", err)
+	return lastErr
+}
+
+func (c *APIClient) buildError(statusCode int, body []byte) error {
+	var errResp struct {
+		Error   string `json:"error"`
+		Message string `json:"message"`
+	}
+	_ = json.Unmarshal(body, &errResp)
+	msg := errResp.Error
+	if msg == "" {
+		msg = errResp.Message
+	}
+	if msg == "" {
+		msg = fmt.Sprintf("HTTP %d", statusCode)
+		if len(body) > 0 && body[0] != '{' {
+			msg = fmt.Sprintf("%s: %s", msg, strings.TrimSpace(string(body)))
 		}
 	}
-	return nil
+	hint := ""
+	switch statusCode {
+	case 401:
+		hint = "\n   → Your session may have expired — run: ffly login"
+	case 403:
+		hint = "\n   → You don't have permission to perform this action"
+	case 404:
+		hint = "\n   → The resource was not found"
+	case 409:
+		hint = "\n   → This version already exists — run: ffly update patch"
+	case 429:
+		hint = "\n   → Rate limited — retrying with backoff"
+	case 502, 503, 504:
+		hint = "\n   → Server temporarily unavailable — retrying"
+	}
+	return fmt.Errorf("%s%s", msg, hint)
+}
+
+func cloneRequest(req *http.Request) *http.Request {
+	r := req.Clone(req.Context())
+	if req.Body != nil && req.GetBody != nil {
+		body, _ := req.GetBody()
+		r.Body = body
+	}
+	return r
 }
 
 // App is a minimal app for backend commands.
@@ -258,7 +294,7 @@ func (c *APIClient) StreamLines(path string, fn func(line string) bool) error {
 		req.Header.Set("Authorization", "Bearer "+c.Token)
 	}
 	req.Header.Set("Accept", "text/event-stream")
-	req.Header.Set("User-Agent", "fly-cli/"+version.Short())
+	req.Header.Set("User-Agent", "ffly-cli/"+version.Short())
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("network error: %w", err)

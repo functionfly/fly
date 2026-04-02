@@ -26,9 +26,9 @@ deterministic execution. The compiler enforces restrictions to ensure the
 function will produce identical outputs for identical inputs.
 
 Examples:
-  fly flypy build handler.py
-  fly flypy build src/main.py --output=./build
-  fly flypy build --config=custom.yaml`,
+  ffly flypy build handler.py
+  ffly flypy build src/main.py --output=./build
+  ffly flypy build --config=custom.yaml`,
 	Args: cobra.ExactArgs(1),
 	Run:  flypyBuildRun,
 }
@@ -158,6 +158,6 @@ func flypyBuildRun(cmd *cobra.Command, args []string) {
 
 	fmt.Printf("\n")
 	fmt.Printf("Next steps:\n")
-	fmt.Printf("  fly flypy local     # Test locally\n")
-	fmt.Printf("  fly flypy deploy    # Deploy to registry\n")
+	fmt.Printf("  ffly flypy local     # Test locally\n")
+	fmt.Printf("  ffly flypy deploy    # Deploy to registry\n")
 }

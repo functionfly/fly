@@ -20,8 +20,8 @@ var flypyConfigCmd = &cobra.Command{
 	Long: `Manage FlyPy configuration files and settings.
 
 Examples:
-  fly flypy config init    # Create a new flypy.yaml config file
-  fly flypy config show    # Display current configuration`,
+  ffly flypy config init    # Create a new flypy.yaml config file
+  ffly flypy config show    # Display current configuration`,
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 	},
@@ -34,7 +34,7 @@ var flypyConfigInitCmd = &cobra.Command{
 	Long: `Creates a new flypy.yaml configuration file with default settings.
 
 Examples:
-  fly flypy config init`,
+  ffly flypy config init`,
 	Run: flypyConfigInitRun,
 }
 
@@ -45,7 +45,7 @@ var flypyConfigShowCmd = &cobra.Command{
 	Long: `Displays the current FlyPy configuration from flypy.yaml or environment variables.
 
 Examples:
-  fly flypy config show`,
+  ffly flypy config show`,
 	Run: flypyConfigShowRun,
 }
 
@@ -141,7 +141,7 @@ func flypyConfigInitRun(cmd *cobra.Command, args []string) {
 	// Check if config file already exists
 	if _, err := os.Stat("flypy.yaml"); err == nil {
 		fmt.Fprintf(os.Stderr, "Error: flypy.yaml already exists\n")
-		fmt.Fprintf(os.Stderr, "Use 'fly flypy config show' to view current configuration\n")
+		fmt.Fprintf(os.Stderr, "Use 'ffly flypy config show' to view current configuration\n")
 		os.Exit(1)
 	}
 
@@ -161,7 +161,7 @@ func flypyConfigInitRun(cmd *cobra.Command, args []string) {
 	fmt.Printf("  deploy:   Deployment settings  \n")
 	fmt.Printf("  local:    Local runtime settings\n")
 	fmt.Printf("\n")
-	fmt.Printf("Use 'fly flypy config show' to view current settings\n")
+	fmt.Printf("Use 'ffly flypy config show' to view current settings\n")
 }
 
 func flypyConfigShowRun(cmd *cobra.Command, args []string) {

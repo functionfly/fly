@@ -11,12 +11,12 @@ func NewCompletionCmd(root *cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "completion [bash|zsh|fish|powershell]",
 		Short: "Generate shell completion scripts",
-		Long: `Generate shell completion scripts for fly.
+		Long: `Generate shell completion scripts for ffly.
 
-Bash:   source <(fly completion bash)
-Zsh:    source <(fly completion zsh)
-Fish:   fly completion fish | source
-PS:     fly completion powershell | Out-String | Invoke-Expression`,
+Bash:   source <(ffly completion bash)
+Zsh:    source <(ffly completion zsh)
+Fish:   ffly completion fish | source
+PS:     ffly completion powershell | Out-String | Invoke-Expression`,
 		ValidArgs: []string{"bash", "zsh", "fish", "powershell"},
 		Args:      cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -34,5 +34,14 @@ PS:     fly completion powershell | Out-String | Invoke-Expression`,
 			}
 		},
 	}
+	return cmd
+}
+
+// NewCompletionsAliasCmd returns an alias for "completion" (plural form).
+func NewCompletionsAliasCmd(root *cobra.Command) *cobra.Command {
+	cmd := NewCompletionCmd(root)
+	cmd.Use = "completions [bash|zsh|fish|powershell]"
+	cmd.Short = "Alias for 'completion' (generate shell completion scripts)"
+	cmd.Hidden = true
 	return cmd
 }

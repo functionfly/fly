@@ -51,7 +51,7 @@ func LoadCredentials() (*Credentials, error) {
 		var creds Credentials
 		if err := json.Unmarshal([]byte(data), &creds); err == nil {
 			if !creds.ExpiresAt.IsZero() && time.Now().After(creds.ExpiresAt) {
-				return nil, fmt.Errorf("your session has expired\n   → Run: fly login")
+				return nil, fmt.Errorf("your session has expired\n   → Run: ffly login")
 			}
 			return &creds, nil
 		}
@@ -70,16 +70,16 @@ func loadCredentialsFromFile() (*Credentials, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("not logged in\n   → Run: fly login")
+			return nil, fmt.Errorf("not logged in\n   → Run: ffly login")
 		}
 		return nil, fmt.Errorf("could not read credentials: %w", err)
 	}
 	var creds Credentials
 	if err := json.Unmarshal(data, &creds); err != nil {
-		return nil, fmt.Errorf("credentials file is corrupted\n   → Run: fly login")
+		return nil, fmt.Errorf("credentials file is corrupted\n   → Run: ffly login")
 	}
 	if !creds.ExpiresAt.IsZero() && time.Now().After(creds.ExpiresAt) {
-		return nil, fmt.Errorf("your session has expired\n   → Run: fly login")
+		return nil, fmt.Errorf("your session has expired\n   → Run: ffly login")
 	}
 	return &creds, nil
 }
@@ -159,11 +159,11 @@ func resolveAuthorName(args []string) (author, name string, err error) {
 	}
 	manifest, merr := LoadManifest("")
 	if merr != nil {
-		return "", "", fmt.Errorf("no functionfly.jsonc found — run 'fly init' or pass author/name as argument")
+		return "", "", fmt.Errorf("no functionfly.jsonc found — run 'ffly init' or pass author/name as argument")
 	}
 	creds, cerr := LoadCredentials()
 	if cerr != nil {
-		return "", "", fmt.Errorf("not logged in — run 'fly login'")
+		return "", "", fmt.Errorf("not logged in — run 'ffly login'")
 	}
 	return creds.User.Username, manifest.Name, nil
 }

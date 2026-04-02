@@ -13,7 +13,7 @@ func NewUpdateCmd() *cobra.Command {
 		Use:   "update <bump>",
 		Short: "Bump the function version",
 		Long:  "Bump the version in functionfly.jsonc.\n\nBump levels: patch, minor, major, or x.y.z",
-		Example: "  fly update patch\n  fly update minor\n  fly update major\n  fly update 2.0.0",
+		Example: "  ffly update patch\n  ffly update minor\n  ffly update major\n  ffly update 2.0.0",
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			bump := "patch"
@@ -44,7 +44,7 @@ func runUpdate(bump string) error {
 	}
 	fmt.Printf("✅ Version bumped\n")
 	fmt.Printf("   %s → %s\n\n", current, newVersion)
-	fmt.Printf("Run 'fly publish' to deploy the new version.\n")
+	fmt.Printf("Run 'ffly publish' to deploy the new version.\n")
 	return nil
 }
 

@@ -66,7 +66,7 @@ func Load() (*Credentials, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("not logged in. run 'fly login' first")
+			return nil, fmt.Errorf("not logged in. run 'ffly login' first")
 		}
 		return nil, fmt.Errorf("failed to read credentials file: %w", err)
 	}
@@ -78,7 +78,7 @@ func Load() (*Credentials, error) {
 
 	// Check if token is expired
 	if time.Now().After(creds.ExpiresAt) {
-		return nil, fmt.Errorf("authentication token expired. run 'fly login' again")
+		return nil, fmt.Errorf("authentication token expired. run 'ffly login' again")
 	}
 
 	return &creds, nil
