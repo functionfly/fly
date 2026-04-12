@@ -148,11 +148,12 @@ var Trace = func(format string, args ...interface{}) {
 	}
 }
 
-// DebugMode, VerboseMode, TraceMode, and OutputFormat are global flags set by command-line arguments.
+// DebugMode, VerboseMode, TraceMode, YesMode, and OutputFormat are global flags set by command-line arguments.
 // These are accessed by commands throughout the CLI.
 var DebugMode = false
 var VerboseMode = false
 var TraceMode = false
+var YesMode = false
 
 // OutputFormat controls output rendering across commands.
 // Values: "table" (default human-readable), "json", "csv".

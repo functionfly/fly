@@ -70,7 +70,7 @@ func runDeploy(env string, canaryPercent int, access string, force, dryRun, asJS
 		label = fmt.Sprintf("canary@%d%%", canaryPercent)
 	}
 
-	if !force && IsInteractive() && !asJSON && !WantJSON() {
+	if !force && !YesMode && IsInteractive() && !asJSON && !WantJSON() {
 		confirmed := PromptConfirm(
 			fmt.Sprintf("Deploy %s v%s → %s?", manifest.Name, manifest.Version, label),
 			true,

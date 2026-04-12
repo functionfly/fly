@@ -1,10 +1,15 @@
 package commands
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/zalando/go-keyring"
@@ -97,6 +102,7 @@ func SaveCredentials(creds *Credentials) error {
 		if err := saveCredentialsToFile(creds); err != nil {
 			return err
 		}
+		fmt.Fprintf(os.Stderr, "⚠️  OS keychain unavailable — credentials saved to ~/.functionfly/credentials.json (chmod 600)\n")
 		return nil
 	}
 
@@ -145,6 +151,83 @@ func deleteCredentialsFile() error {
 func IsLoggedIn() bool {
 	_, err := LoadCredentials()
 	return err == nil
+}
+
+// RefreshCredentials attempts to refresh an expired or expiring credential's token.
+// If the stored credentials have a refresh_token, it calls POST /auth/refresh with
+// the refresh_token and updates the stored credentials. Returns the new Credentials
+// or an error if refresh fails.
+func RefreshCredentials(ctx context.Context) (*Credentials, error) {
+	creds, err := LoadCredentials()
+	if err != nil {
+		return nil, err
+	}
+	if creds.RefreshToken == "" {
+		return nil, fmt.Errorf("no refresh token available\n   → Run: ffly login")
+	}
+
+	baseURL := resolveBaseURL()
+	data := url.Values{}
+	data.Set("refresh_token", creds.RefreshToken)
+
+	req, err := http.NewRequestWithContext(ctx, "POST", baseURL+"/auth/refresh", strings.NewReader(data.Encode()))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	client := &http.Client{Timeout: 15 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("refresh request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
+		return nil, fmt.Errorf("token refresh failed (HTTP %d): %s", resp.StatusCode, string(body))
+	}
+
+	var out struct {
+		Token        string `json:"token"`
+		RefreshToken string `json:"refresh_token,omitempty"`
+		ExpiresAt    string `json:"expires_at"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return nil, fmt.Errorf("invalid refresh response: %w", err)
+	}
+	if out.Token == "" {
+		return nil, fmt.Errorf("refresh response missing token")
+	}
+
+	creds.Token = out.Token
+	if out.RefreshToken != "" {
+		creds.RefreshToken = out.RefreshToken
+	}
+	creds.ExpiresAt = resolveExpiresAt(out.ExpiresAt)
+
+	if err := SaveCredentials(creds); err != nil {
+		return nil, fmt.Errorf("could not save refreshed credentials: %w", err)
+	}
+	return creds, nil
+}
+
+// SessionExpiresIn returns a human-readable string describing when the session expires,
+// or an empty string if there are no credentials or the expiry is unset.
+func SessionExpiresIn() string {
+	creds, err := LoadCredentials()
+	if err != nil || creds.ExpiresAt.IsZero() {
+		return ""
+	}
+	remaining := time.Until(creds.ExpiresAt)
+	if remaining <= 0 {
+		return "expired"
+	}
+	if remaining < 24*time.Hour {
+		return fmt.Sprintf("%.0f hours", remaining.Hours())
+	}
+	days := int(remaining.Hours() / 24)
+	return fmt.Sprintf("%d days", days)
 }
 
 // resolveAuthorName returns (author, name) either from an optional positional

@@ -45,7 +45,8 @@ Go from idea → global API in under 60 seconds.
 	root.PersistentFlags().BoolVar(&DebugMode, "debug", false, "Enable full debug output")
 	root.PersistentFlags().BoolVarP(&VerboseMode, "verbose", "v", false, "Enable verbose API calls")
 	root.PersistentFlags().BoolVar(&TraceMode, "trace", false, "Enable HTTP trace with request/response bodies")
-	root.PersistentFlags().StringVarP(&OutputFormat, "format", "o", "table", "Output format: table, json")
+	root.PersistentFlags().StringVarP(&OutputFormat, "format", "m", "table", "Output format: table, json")
+	root.PersistentFlags().BoolVarP(&YesMode, "yes", "y", false, "Skip all confirmation prompts and answer yes automatically")
 
 	// Set up persistent pre-run to handle debug mode
 	root.PersistentPreRun = func(cmd *cobra.Command, args []string) {
@@ -62,6 +63,7 @@ Go from idea → global API in under 60 seconds.
 		NewLoginCmd(),
 		NewWhoamiCmd(),
 		NewLogoutCmd(),
+		NewAuthRefreshCmd(),
 		NewConfigCmd(),
 		NewSelfUpdateCmd(),
 		NewInitCmd(),

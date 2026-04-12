@@ -50,9 +50,9 @@ func newSpinnerModel(message string) *SpinnerModel {
 	return &SpinnerModel{spinner: s, message: message}
 }
 
-// WithSpinner runs fn with a spinner. Falls back to plain output in verbose/debug mode.
+// WithSpinner runs fn with a spinner. Falls back to plain output in verbose/debug/non-interactive mode.
 func WithSpinner(message string, fn func() error) error {
-	if VerboseMode || DebugMode {
+	if VerboseMode || DebugMode || !IsInteractive() {
 		fmt.Printf("%s...\n", message)
 		return fn()
 	}
@@ -144,7 +144,7 @@ func newProgressModel(message string, current, total int) *ProgressModel {
 
 // WithProgress runs fn with a progress bar. fn receives an updater callback.
 func WithProgress(message string, current, total int, fn func(updater func(int, int) error) error) error {
-	if VerboseMode || DebugMode {
+	if VerboseMode || DebugMode || !IsInteractive() {
 		fmt.Printf("%s...\n", message)
 		updater := func(c, t int) error {
 			fmt.Printf("  Progress: %d/%d (%d%%)\n", c, t, (c*100)/t)
@@ -271,7 +271,7 @@ type FileProgressUpdater func(current, total int64)
 
 // WithFileProgress runs fn with file-level progress tracking.
 func WithFileProgress(message string, totalSize int64, fn func(FileProgressUpdater) error) error {
-	if VerboseMode || DebugMode {
+	if VerboseMode || DebugMode || !IsInteractive() {
 		fmt.Printf("%s...\n", message)
 		return fn(func(current, total int64) {
 			if total > 0 {
@@ -343,7 +343,7 @@ type SimpleSpinner struct{ message string }
 func NewSimpleSpinner(message string) *SimpleSpinner { return &SimpleSpinner{message: message} }
 
 func (s *SimpleSpinner) Start() {
-	if VerboseMode || DebugMode {
+	if VerboseMode || DebugMode || !IsInteractive() {
 		fmt.Printf("%s...\n", s.message)
 	}
 }

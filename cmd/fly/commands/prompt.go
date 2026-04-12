@@ -4,7 +4,10 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"os/exec"
+	"runtime"
 	"strings"
+	"time"
 )
 
 // IsInteractive returns true if stdin is a terminal.
@@ -84,4 +87,54 @@ func PromptConfirm(question string, defaultYes bool) bool {
 		return defaultYes
 	}
 	return answer == "y" || answer == "yes"
+}
+
+// resolveBaseURL returns the API base URL, checking env then config then default.
+func resolveBaseURL() string {
+	if baseURL := os.Getenv("FFLY_API_URL"); baseURL != "" {
+		return baseURL
+	}
+	if cfg, _ := LoadConfig(); cfg != nil && cfg.API.URL != "" {
+		return cfg.API.URL
+	}
+	return "https://api.functionfly.com"
+}
+
+// resolveExpiresAt returns the token expiry time. If the API-provided time is
+// zero or far in the future (>90 days), it falls back to a default 30-day TTL.
+func resolveExpiresAt(apiExpiresAt string) time.Time {
+	defaultTTL := 30 * 24 * time.Hour
+	if apiExpiresAt != "" {
+		if t, err := time.Parse(time.RFC3339, apiExpiresAt); err == nil {
+			if !t.IsZero() && t.After(time.Now()) {
+				if t.Before(time.Now().Add(90 * 24 * time.Hour)) {
+					return t
+				}
+			}
+		}
+	}
+	return time.Now().Add(defaultTTL)
+}
+
+// openBrowser opens the given URL in the system default browser.
+// It returns an error if the browser cannot be launched.
+func openBrowser(url string) error {
+	var cmd string
+	var args []string
+	switch runtime.GOOS {
+	case "darwin":
+		cmd = "open"
+		args = []string{url}
+	case "windows":
+		cmd = "cmd"
+		args = []string{"/c", "start", url}
+	default:
+		cmd = "xdg-open"
+		args = []string{url}
+	}
+	err := exec.Command(cmd, args...).Run()
+	if err != nil {
+		return fmt.Errorf("%s: %w", cmd, err)
+	}
+	return nil
 }

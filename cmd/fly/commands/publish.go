@@ -97,7 +97,7 @@ func runPublish(access string, force, build, dryRun, asJSON, skipTypeCheck bool)
 		}
 		return nil
 	}
-	if !force && IsInteractive() && !asJSON {
+	if !force && !YesMode && IsInteractive() && !asJSON {
 		confirmed := PromptConfirm(fmt.Sprintf("Publish %s@%s (%s)?", manifest.Name, manifest.Version, accessStr(isPublic)), true)
 		if !confirmed {
 			fmt.Println("Publish cancelled.")

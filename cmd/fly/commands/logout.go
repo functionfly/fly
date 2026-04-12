@@ -23,10 +23,10 @@ func NewLogoutCmd() *cobra.Command {
 func runLogout(force bool) error {
 	creds, err := LoadCredentials()
 	if err != nil {
-		fmt.Println("You are not currently logged in.")
-		return nil
+		return fmt.Errorf("not logged in — nothing to log out from\n   → Run: ffly login")
 	}
-	if !force && IsInteractive() {
+	// Skip prompt in non-interactive (CI) or when --force is set.
+	if !force && !YesMode && IsInteractive() {
 		confirmed := PromptConfirm(fmt.Sprintf("Log out %s?", creds.User.Username), false)
 		if !confirmed {
 			fmt.Println("Logout cancelled.")

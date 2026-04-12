@@ -28,12 +28,12 @@ func runWhoami(asJSON bool) error {
 	}
 	if asJSON {
 		data, _ := json.MarshalIndent(map[string]interface{}{
-			"id":        creds.User.ID,
-			"username":  creds.User.Username,
-			"email":     creds.User.Email,
-			"provider":  creds.User.Provider,
+			"id":         creds.User.ID,
+			"username":   creds.User.Username,
+			"email":      creds.User.Email,
+			"provider":   creds.User.Provider,
 			"expires_at": creds.ExpiresAt,
-			"namespace": fmt.Sprintf("fx://%s/*", creds.User.Username),
+			"namespace":  fmt.Sprintf("fx://%s/*", creds.User.Username),
 		}, "", "  ")
 		fmt.Println(string(data))
 		return nil
@@ -46,6 +46,7 @@ func runWhoami(asJSON bool) error {
 	fmt.Printf("   Namespace: fx://%s/*\n", creds.User.Username)
 	if !creds.ExpiresAt.IsZero() {
 		fmt.Printf("   Expires:   %s\n", creds.ExpiresAt.Format("2006-01-02 15:04 UTC"))
+		fmt.Printf("   Session:   %s remaining\n", SessionExpiresIn())
 	}
 	return nil
 }

@@ -87,6 +87,21 @@ func capitalize(s string) string {
 func getChangelogEntries() []ChangelogEntry {
 	return []ChangelogEntry{
 		{
+			Version: "1.2.0",
+			Date:    "2026-04-12",
+			Changes: []Change{
+				{Category: "added", Summary: "`ffly config set KEY=VALUE` to set config values via CLI"},
+				{Category: "added", Summary: "`ffly env apply` to set environment variables from a .env file"},
+				{Category: "added", Summary: "`--dry-run` flag on `ffly env set`, `ffly env unset`, and `ffly env apply`"},
+				{Category: "added", Summary: "`-y/--yes` global flag to skip all confirmation prompts (CI-safe)"},
+				{Category: "added", Summary: "Persistent `--yes/-y` flag to auto-confirm deploy, publish, logout, and env operations"},
+				{Category: "fixed", Summary: "Spinners now fall back gracefully in headless/non-TTY environments"},
+				{Category: "fixed", Summary: "`--dry-run` for env commands no longer requires credentials"},
+				{Category: "fixed", Summary: "Bash completion now works (fixed duplicate -o shorthand conflict)"},
+				{Category: "changed", Summary: "Renamed `--format` shorthand from `-o` to `-m` to avoid conflicts with subcommands"},
+			},
+		},
+		{
 			Version: "1.1.0",
 			Date:    "2026-04-01",
 			Changes: []Change{
